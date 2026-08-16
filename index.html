@@ -8,10 +8,6 @@
     <title>Fileverse - Free Universal File Editor & Converter</title>
     <meta name="title" content="Fileverse - Free Universal File Editor & Converter" />
     <meta name="description" content="Edit Word, Excel, PDFs, and Images like Adobe and WPS, directly in your browser. No sign-up, no uploads, 100% private. Free AI tools included." />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://fileverse.pages.dev/" />
-    <meta property="og:title" content="Fileverse - Free Universal File Editor" />
-    <meta property="og:description" content="The most advanced free online office suite. Edit and convert everything. No login required." />
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -22,6 +18,22 @@
       "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" }
     }
     </script>
+    <!-- Load Luckysheet Excel Engine -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/plugins/css/pluginsCss.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/plugins/plugins.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/css/luckysheet.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/assets/iconfont/iconfont.css" />
+    <script src="https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/plugins/js/plugin.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/luckysheet@2.1.13/dist/luckysheet.umd.js"></script>
+    <style>
+      /* Fix: Only print the document, hide the website UI when saving as PDF */
+      @media print {
+        body * { visibility: hidden; }
+        #print-area, #print-area * { visibility: visible; }
+        #print-area { position: absolute; left: 0; top: 0; width: 100%; height: 100%; }
+        .no-print { display: none !important; }
+      }
+    </style>
   </head>
   <body>
     <div id="root"></div>
