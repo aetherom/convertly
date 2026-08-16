@@ -1,5 +1,5 @@
 {
-  "name": "convertly",
+  "name": "fileverse",
   "private": true,
   "version": "1.0.0",
   "type": "module",
@@ -9,8 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@tiptap/react": "^2.4.0",
+    "@tiptap/starter-kit": "^2.4.0",
+    "@tiptap/extension-text-align": "^2.4.0",
+    "@tiptap/extension-color": "^2.4.0",
+    "@tiptap/extension-text-style": "^2.4.0",
+    "@tiptap/extension-underline": "^2.4.0",
     "file-type": "^19.0.0",
     "lucide-react": "^0.400.0",
+    "pdf-lib": "^1.17.1",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.24.0"
