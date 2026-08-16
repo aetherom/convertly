@@ -39,7 +39,7 @@ export default function Home() {
           <path d="M128 128 L256 128 L384 256 L256 384 L128 384 Z" fill="none" stroke="#ffffff" strokeWidth="24" strokeLinejoin="round"/>
           <circle cx="320" cy="192" r="32" fill="#ffffff"/>
         </svg>
-        <h1 className="text-xl font-bold text-slate-900">Convertly</h1>
+        <h1 className="text-xl font-bold text-slate-900">Fileverse</h1>
       </header>
 
       <main className="flex-1 flex flex-col lg:flex-row max-w-7xl mx-auto w-full p-6 gap-6">
