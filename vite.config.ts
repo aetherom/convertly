@@ -9,8 +9,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icon.svg'],
       manifest: {
-        name: 'Convertly - Universal Editor',
-        short_name: 'Convertly',
+        name: 'Fileverse - Universal Editor',
+        short_name: 'Fileverse',
         description: 'Edit and convert Word, PDF, Excel, and Images. No login. 100% Private.',
         theme_color: '#0f172a',
         background_color: '#0f172a',
