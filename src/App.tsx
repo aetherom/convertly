@@ -8,12 +8,12 @@ const ConsentGate = ({ children }: { children: React.ReactNode }) => {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
 
   useEffect(() => {
-    const consent = localStorage.getItem('convertly-consent');
+    const consent = localStorage.getItem('fileverse-consent');
     setHasAccess(consent === 'true');
   }, []);
 
   const handleAccept = () => {
-    localStorage.setItem('convertly-consent', 'true');
+    localStorage.setItem('fileverse-consent', 'true');
     setHasAccess(true);
   };
 
@@ -36,7 +36,7 @@ const ConsentGate = ({ children }: { children: React.ReactNode }) => {
             <AlertTriangle className="w-12 h-12 text-amber-400 mb-4" />
             <h2 className="text-2xl font-bold mb-2">Legal Consent & Age Verification</h2>
             <p className="text-slate-400 text-sm mb-6">
-              By using Convertly, you confirm you are at least 16 years old. 
+              By using Fileverse, you confirm you are at least 16 years old. 
               All file processing happens locally on your device. We do not collect, store, or transmit your files or personal data.
             </p>
             <div className="flex flex-col gap-3 w-full">
