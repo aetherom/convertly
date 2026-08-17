@@ -28,6 +28,10 @@ export default function DecryptGate() {
     );
   };
 
+  // FIXED: Robust Base64 handling for large text
+  const bufToB64 = (buf: ArrayBuffer) => btoa(String.fromCharCode(...new Uint8Array(buf)));
+  const b64ToBuf = (b64: string) => Uint8Array.from(atob(b64), c => c.charCodeAt(0));
+
   const handleEncrypt = async () => {
     setError('');
     if (!inputText || !password) return setError('Please enter text and a password.');
@@ -38,13 +42,11 @@ export default function DecryptGate() {
       
       const ciphertext = await window.crypto.subtle.encrypt({ name: 'AES-GCM', iv }, key, enc.encode(inputText));
 
-      const saltB64 = btoa(String.fromCharCode(...salt));
-      const ivB64 = btoa(String.fromCharCode(...iv));
-      const cipherB64 = btoa(String.fromCharCode(...new Uint8Array(ciphertext)));
-
-      const link = `${window.location.origin}/decrypt#enc=${saltB64}:${ivB64}:${cipherB64}`;
+      const link = `${window.location.origin}/decrypt#enc=${bufToB64(salt.buffer)}:${bufToB64(iv.buffer)}:${bufToB64(ciphertext)}`;
       setGeneratedLink(link);
-    } catch (err) { setError('Encryption failed.'); }
+    } catch (err) {
+      setError('Encryption failed. File might be too large for URL.');
+    }
   };
 
   const handleDecrypt = async () => {
@@ -57,9 +59,9 @@ export default function DecryptGate() {
       
       const [saltB64, ivB64, cipherB64] = parts;
       
-      const salt = Uint8Array.from(atob(saltB64), c => c.charCodeAt(0));
-      const iv = Uint8Array.from(atob(ivB64), c => c.charCodeAt(0));
-      const ciphertext = Uint8Array.from(atob(cipherB64), c => c.charCodeAt(0));
+      const salt = b64ToBuf(saltB64);
+      const iv = b64ToBuf(ivB64);
+      const ciphertext = b64ToBuf(cipherB64);
 
       const key = await deriveKey(password, salt);
       
