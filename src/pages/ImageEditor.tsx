@@ -3,7 +3,7 @@ import { useLocation } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
 import { 
   Download, ArrowLeft, RotateCw, RotateCcw, FlipHorizontal, FlipVertical, 
-  PenTool, Eraser, Type, ZoomIn, ZoomOut, Maximize, Layers, Undo2, Redo2, Upload, Wand2, Scissors 
+  PenTool, Eraser, Type, ZoomIn, ZoomOut, Maximize, Layers, Undo2, Redo2, Upload, Wand2, Scissors, Smile, Sparkles
 } from 'lucide-react';
 
 export default function ImageEditor() {
@@ -11,11 +11,10 @@ export default function ImageEditor() {
   const navigate = useNavigate();
   const [imageUrl, setImageUrl] = useState('');
   const [fileName, setFileName] = useState('untitled');
-  const [activeTool, setActiveTool] = useState<'draw' | 'erase' | null>(null);
+  const [activeTool, setActiveTool] = useState<'draw' | 'erase' | 'blemish' | null>(null);
   
   const [filters, setFilters] = useState({ brightness: 100, contrast: 100, saturate: 100, grayscale: 0, sepia: 0, blur: 0, invert: 0, rotate: 0, flipH: 1, flipV: 1 });
   const [zoom, setZoom] = useState(100);
-  
   const [brushColor, setBrushColor] = useState('#ff0000');
   const [brushSize, setBrushSize] = useState(5);
   
@@ -40,7 +39,7 @@ export default function ImageEditor() {
   const initCanvas = () => {
     const canvas = canvasRef.current; if (!canvas) return;
     const ctx = canvas.getContext('2d', { willReadFrequently: true }); if (!ctx) return;
-    canvas.width = 800; canvas.height = 600; // Max edit size for performance
+    canvas.width = 800; canvas.height = 600;
     ctx.lineCap = 'round'; ctx.strokeStyle = brushColor; ctx.lineWidth = brushSize;
     ctxRef.current = ctx;
     saveHistory();
@@ -88,15 +87,16 @@ export default function ImageEditor() {
       ctx.globalCompositeOperation = 'source-over';
       ctx.strokeStyle = brushColor;
       ctx.lineWidth = brushSize;
-    } else if (activeTool === 'erase') {
-      // Magic Eraser: Sample surrounding pixels and paint over object
+    } else if (activeTool === 'erase' || activeTool === 'blemish') {
+      // Magic Eraser / Blemish Remover: Sample surrounding pixels and paint over object
       ctx.globalCompositeOperation = 'source-over';
-      const sample = ctx.getImageData(Math.max(0, x-20), Math.max(0, y-20), 40, 40).data;
-      let r=0,g=0,b=0, count=0;
+      const sampleRadius = 20;
+      const sample = ctx.getImageData(Math.max(0, x - sampleRadius), Math.max(0, y - sampleRadius), sampleRadius * 2, sampleRadius * 2).data;
+      let r=0, g=0, b=0, count=0;
       for(let i=0; i<sample.length; i+=4) { r+=sample[i]; g+=sample[i+1]; b+=sample[i+2]; count++; }
       r=Math.round(r/count); g=Math.round(g/count); b=Math.round(b/count);
       ctx.strokeStyle = `rgb(${r},${g},${b})`;
-      ctx.lineWidth = brushSize * 3; // Thicker to cover object
+      ctx.lineWidth = activeTool === 'blemish' ? brushSize * 1.5 : brushSize * 3;
     }
     ctx.stroke();
   };
@@ -111,28 +111,65 @@ export default function ImageEditor() {
   };
 
   const removeBackground = () => {
-    // AI Background Subtractor (Chroma Keying)
     const canvas = canvasRef.current; if (!canvas) return;
     const ctx = canvas.getContext('2d'); if (!ctx) return;
-    
-    const img = new Image();
-    img.src = imageUrl;
+    const img = new Image(); img.src = imageUrl;
     img.onload = () => {
       ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
       const data = imageData.data;
-      
-      // Sample top-left pixel as background color
       const bgR = data[0], bgG = data[1], bgB = data[2];
       const tolerance = 40;
-      
       for (let i = 0; i < data.length; i += 4) {
         if (Math.abs(data[i] - bgR) < tolerance && Math.abs(data[i+1] - bgG) < tolerance && Math.abs(data[i+2] - bgB) < tolerance) {
-          data[i+3] = 0; // Set alpha to 0 (transparent)
+          data[i+3] = 0;
         }
       }
       ctx.putImageData(imageData, 0, 0);
       saveHistory();
+    };
+  };
+
+  // AI Beauty Tool: Teeth Whitener
+  const whitenTeeth = () => {
+    const canvas = canvasRef.current; if (!canvas) return;
+    const ctx = canvas.getContext('2d'); if (!ctx) return;
+    const img = new Image(); img.src = imageUrl;
+    img.onload = () => {
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const data = imageData.data;
+      // Target yellowish/grayish teeth pixels (simplified)
+      for (let i = 0; i < data.length; i += 4) {
+        const r = data[i], g = data[i+1], b = data[i+2];
+        if (r > 150 && r < 255 && g > 140 && b > 120 && r > g && g > b) {
+          // Increase brightness, reduce yellow (blue)
+          data[i] = Math.min(255, r + 20);
+          data[i+1] = Math.min(255, g + 10);
+          data[i+2] = Math.min(255, b + 40);
+        }
+      }
+      ctx.putImageData(imageData, 0, 0);
+      saveHistory();
+    };
+  };
+
+  // AI Upscaler (2x)
+  const upscaleImage = () => {
+    const canvas = canvasRef.current; if (!canvas) return;
+    const ctx = canvas.getContext('2d'); if (!ctx) return;
+    const img = new Image(); img.src = imageUrl;
+    img.onload = () => {
+      const tempCanvas = document.createElement('canvas');
+      tempCanvas.width = img.width * 2; tempCanvas.height = img.height * 2;
+      const tempCtx = tempCanvas.getContext('2d')!;
+      tempCtx.imageSmoothingEnabled = true;
+      tempCtx.imageSmoothingQuality = 'high';
+      tempCtx.drawImage(img, 0, 0, tempCanvas.width, tempCanvas.height);
+      const link = document.createElement('a');
+      link.download = 'upscaled.png';
+      link.href = tempCanvas.toDataURL('image/png');
+      link.click();
     };
   };
 
@@ -149,7 +186,6 @@ export default function ImageEditor() {
         mergeCtx.scale(filters.flipH, filters.flipV);
         mergeCtx.rotate(filters.rotate * Math.PI / 180);
         mergeCtx.drawImage(img, -img.width / 2, -img.height / 2);
-        
         if (canvasRef.current) {
           mergeCtx.filter = 'none';
           mergeCtx.drawImage(canvasRef.current, 0, 0, img.width, img.height);
@@ -176,7 +212,7 @@ export default function ImageEditor() {
       <header className="bg-slate-800 border-b border-slate-700 px-4 py-3 flex justify-between items-center sticky top-0 z-50 shadow-md no-print">
         <div className="flex items-center gap-3">
           <button onClick={() => navigate('/')} className="p-2 hover:bg-slate-700 rounded-lg transition-colors"><ArrowLeft className="w-5 h-5 text-slate-300" /></button>
-          <div className="flex items-center gap-2 text-purple-400"><Layers className="w-5 h-5" /><h1 className="font-bold text-lg hidden sm:block text-slate-100">Image Studio</h1></div>
+          <div className="flex items-center gap-2 text-purple-400"><Layers className="w-5 h-5" /><h1 className="font-bold text-lg hidden sm:block text-slate-100">Photo Studio</h1></div>
         </div>
         <div className="flex gap-2 items-center">
           <input type="file" accept="image/*" ref={fileInputRef} onChange={e => e.target.files && loadFile(e.target.files[0])} className="hidden" />
@@ -194,16 +230,18 @@ export default function ImageEditor() {
 
           <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider">AI Magic Tools</h3>
           <button onClick={removeBackground} className="w-full flex items-center justify-center gap-2 py-2 bg-indigo-600 text-white rounded-lg text-xs font-semibold hover:bg-indigo-500"><Wand2 className="w-4 h-4" /> Remove Background</button>
-          <button onClick={() => { setActiveTool('erase'); }} className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-colors ${activeTool === 'erase' ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}><Scissors className="w-4 h-4" /> Magic Eraser</button>
+          <button onClick={whitenTeeth} className="w-full flex items-center justify-center gap-2 py-2 bg-blue-600 text-white rounded-lg text-xs font-semibold hover:bg-blue-500"><Smile className="w-4 h-4" /> Whiten Teeth</button>
+          <button onClick={upscaleImage} className="w-full flex items-center justify-center gap-2 py-2 bg-green-600 text-white rounded-lg text-xs font-semibold hover:bg-green-500"><Sparkles className="w-4 h-4" /> Upscale 2x</button>
+          <button onClick={() => { setActiveTool('blemish'); }} className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-colors ${activeTool === 'blemish' ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}><Scissors className="w-4 h-4" /> Blemish Remover</button>
 
           <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mt-4">Adjust</h3>
           <Slider label="Brightness" value={filters.brightness} min={0} max={200} onChange={v => setFilters({...filters, brightness: v})} />
           <Slider label="Contrast" value={filters.contrast} min={0} max={200} onChange={v => setFilters({...filters, contrast: v})} />
           <Slider label="Saturate" value={filters.saturate} min={0} max={200} onChange={v => setFilters({...filters, saturate: v})} />
-          <Slider label="Grayscale" value={filters.grayscale} min={0} max={100} onChange={v => setFilters({...filters, grayscale: v})} />
           
-          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mt-4">Draw</h3>
+          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mt-4">Draw & Erase</h3>
           <button onClick={() => { setActiveTool('draw'); }} className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-colors ${activeTool === 'draw' ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}><PenTool className="w-4 h-4" /> Draw Brush</button>
+          <button onClick={() => { setActiveTool('erase'); }} className={`w-full flex items-center justify-center gap-2 py-2 rounded-lg text-xs font-semibold transition-colors ${activeTool === 'erase' ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}><Eraser className="w-4 h-4" /> Magic Eraser</button>
           <button onClick={clearCanvas} className="w-full flex items-center justify-center gap-2 py-2 bg-slate-700 text-slate-300 rounded-lg text-xs font-semibold hover:bg-slate-600"><Eraser className="w-4 h-4" /> Clear Canvas</button>
           
           <div className="flex items-center gap-2">
@@ -217,14 +255,7 @@ export default function ImageEditor() {
           {imageUrl && (
             <div className="relative" style={{ width: '80%', height: '80%' }}>
               <img src={imageUrl} alt="Editor" className="max-w-full max-h-full object-contain shadow-2xl transition-all duration-300 pointer-events-none absolute inset-0" style={imageFilterStyle} />
-              <canvas 
-                ref={canvasRef} 
-                onMouseDown={startDraw} 
-                onMouseMove={draw}
-                onMouseUp={endDraw}
-                onMouseLeave={endDraw}
-                className={`absolute inset-0 w-full h-full ${activeTool ? 'cursor-crosshair' : 'pointer-events-none'}`}
-              />
+              <canvas ref={canvasRef} onMouseDown={startDraw} onMouseMove={draw} onMouseUp={endDraw} onMouseLeave={endDraw} className={`absolute inset-0 w-full h-full ${activeTool ? 'cursor-crosshair' : 'pointer-events-none'}`} />
             </div>
           )}
         </div>
