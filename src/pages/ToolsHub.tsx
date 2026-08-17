@@ -1,16 +1,15 @@
 import { useNavigate } from 'react-router-dom';
-import { QrCode, Palette, PenTool, Archive, ArrowLeft, Mic, Languages } from 'lucide-react';
+import { Archive, ArrowLeft, Film, BookOpen, Eraser, ZoomIn } from 'lucide-react';
 
 export default function ToolsHub() {
   const navigate = useNavigate();
 
   const tools = [
-    { id: 'qr', name: 'Batch QR Gen', desc: 'Generate 100s of QR codes', icon: <QrCode />, color: 'bg-green-500' },
-    { id: 'color', name: 'Color Extractor', desc: 'Get HEX codes from images', icon: <Palette />, color: 'bg-purple-500' },
-    { id: 'signature', name: 'Signature Maker', desc: 'Draw & export transparent PNG', icon: <PenTool />, color: 'bg-red-500' },
     { id: 'zip', name: 'Zip Builder', desc: 'Compress files client-side', icon: <Archive />, color: 'bg-amber-500' },
-    { id: 'voice', name: 'Voice & TTS', desc: 'Dictation & Text-to-Speech', icon: <Mic />, color: 'bg-pink-500' },
-    { id: 'translate', name: 'Translator', desc: 'Translate text instantly', icon: <Languages />, color: 'bg-teal-500' },
+    { id: 'video', name: 'Video to GIF', desc: 'Convert video clips to GIF', icon: <Film />, color: 'bg-red-500' },
+    { id: 'ebook', name: 'EPUB Builder', desc: 'Turn text into an eBook', icon: <BookOpen />, color: 'bg-blue-500' },
+    { id: 'upscale', name: 'AI Upscaler', desc: '2x Image Resolution', icon: <ZoomIn />, color: 'bg-purple-500' },
+    { id: 'shredder', name: 'File Shredder', desc: 'Securely wipe memory', icon: <Eraser />, color: 'bg-slate-800' },
   ];
 
   return (
@@ -21,7 +20,6 @@ export default function ToolsHub() {
         </button>
         <h1 className="text-xl font-bold tracking-tight text-slate-900">Premium Tools Hub</h1>
       </header>
-
       <main className="flex-1 max-w-7xl mx-auto w-full p-6">
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5 mt-8">
           {tools.map(tool => (
