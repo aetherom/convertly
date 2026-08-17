@@ -3,6 +3,8 @@ import { useState, useEffect } from 'react';
 import { ShieldCheck, AlertTriangle, X } from 'lucide-react';
 import Home from './pages/Home';
 import WordEditor from './pages/WordEditor';
+import ExcelEditor from './pages/ExcelEditor';
+import PdfEditor from './pages/PdfEditor';
 import DecryptGate from './pages/DecryptGate';
 import OpticalShare from './pages/OpticalShare';
 
@@ -65,6 +67,8 @@ export default function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/editor/word" element={<WordEditor />} />
+          <Route path="/editor/excel" element={<ExcelEditor />} />
+          <Route path="/editor/pdf" element={<PdfEditor />} />
           <Route path="/decrypt" element={<DecryptGate />} />
           <Route path="/optical-share" element={<OpticalShare />} />
         </Routes>
