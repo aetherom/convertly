@@ -5,6 +5,7 @@ import Home from './pages/Home';
 import WordEditor from './pages/WordEditor';
 import ExcelEditor from './pages/ExcelEditor';
 import PdfEditor from './pages/PdfEditor';
+import ImageEditor from './pages/ImageEditor';
 import DecryptGate from './pages/DecryptGate';
 import OpticalShare from './pages/OpticalShare';
 
@@ -69,6 +70,7 @@ export default function App() {
           <Route path="/editor/word" element={<WordEditor />} />
           <Route path="/editor/excel" element={<ExcelEditor />} />
           <Route path="/editor/pdf" element={<PdfEditor />} />
+          <Route path="/editor/image" element={<ImageEditor />} />
           <Route path="/decrypt" element={<DecryptGate />} />
           <Route path="/optical-share" element={<OpticalShare />} />
         </Routes>
