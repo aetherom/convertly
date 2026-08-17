@@ -1,15 +1,17 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { ShieldCheck, AlertTriangle, X } from 'lucide-react';
+import { useState, useEffect, lazy, Suspense } from 'react';
+import { ShieldCheck, AlertTriangle, X, Loader2 } from 'lucide-react';
 import Home from './pages/Home';
-import WordEditor from './pages/WordEditor';
-import ExcelEditor from './pages/ExcelEditor';
-import PdfEditor from './pages/PdfEditor';
-import ImageEditor from './pages/ImageEditor';
 import ToolsHub from './pages/ToolsHub';
-import ToolRunner from './pages/ToolRunner';
-import DecryptGate from './pages/DecryptGate';
-import OpticalShare from './pages/OpticalShare';
+
+// Lazy load heavy editor engines (Peak Performance)
+const WordEditor = lazy(() => import('./pages/WordEditor'));
+const ExcelEditor = lazy(() => import('./pages/ExcelEditor'));
+const PdfEditor = lazy(() => import('./pages/PdfEditor'));
+const ImageEditor = lazy(() => import('./pages/ImageEditor'));
+const ToolRunner = lazy(() => import('./pages/ToolRunner'));
+const DecryptGate = lazy(() => import('./pages/DecryptGate'));
+const OpticalShare = lazy(() => import('./pages/OpticalShare'));
 
 const ConsentGate = ({ children }: { children: React.ReactNode }) => {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
@@ -63,21 +65,29 @@ const ConsentGate = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>;
 };
 
+const LoadingFallback = () => (
+  <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
+    <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+  </div>
+);
+
 export default function App() {
   return (
     <BrowserRouter>
       <ConsentGate>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/editor/word" element={<WordEditor />} />
-          <Route path="/editor/excel" element={<ExcelEditor />} />
-          <Route path="/editor/pdf" element={<PdfEditor />} />
-          <Route path="/editor/image" element={<ImageEditor />} />
-          <Route path="/tools" element={<ToolsHub />} />
-          <Route path="/tools/:toolId" element={<ToolRunner />} />
-          <Route path="/decrypt" element={<DecryptGate />} />
-          <Route path="/optical-share" element={<OpticalShare />} />
-        </Routes>
+        <Suspense fallback={<LoadingFallback />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/tools" element={<ToolsHub />} />
+            <Route path="/editor/word" element={<WordEditor />} />
+            <Route path="/editor/excel" element={<ExcelEditor />} />
+            <Route path="/editor/pdf" element={<PdfEditor />} />
+            <Route path="/editor/image" element={<ImageEditor />} />
+            <Route path="/tools/:toolId" element={<ToolRunner />} />
+            <Route path="/decrypt" element={<DecryptGate />} />
+            <Route path="/optical-share" element={<OpticalShare />} />
+          </Routes>
+        </Suspense>
       </ConsentGate>
     </BrowserRouter>
   );
