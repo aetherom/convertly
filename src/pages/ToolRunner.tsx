@@ -20,53 +20,18 @@ export default function ToolRunner() {
         <h1 className="text-xl font-bold tracking-tight text-slate-900 capitalize">{toolId} Tool</h1>
       </header>
       <main className="flex-1 max-w-5xl mx-auto w-full p-6">
-        {toolId === 'regex' && <RegexTool />}
         {toolId === 'qr' && <QRTool />}
         {toolId === 'color' && <ColorTool />}
         {toolId === 'signature' && <SignatureTool />}
         {toolId === 'zip' && <ZipTool />}
         {toolId === 'voice' && <VoiceTool />}
-        {toolId === 'format' && <FormatTool />}
-        {toolId === 'hash' && <HashTool />}
-        {toolId === 'idphoto' && <IDPhotoTool />}
         {toolId === 'translate' && <TranslateTool />}
       </main>
     </div>
   );
 }
 
-// --- 1. REGEX TOOL ---
-function RegexTool() {
-  const [text, setText] = useState('Hello 123 World 456');
-  const [pattern, setPattern] = useState('\\d+');
-  const [matches, setMatches] = useState<string[]>([]);
-
-  useEffect(() => {
-    try {
-      const regex = new RegExp(pattern, 'g');
-      setMatches(text.match(regex) || []);
-    } catch { setMatches([]); }
-  }, [text, pattern]);
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <label className="block text-sm font-bold text-slate-700 mb-2">Text Input</label>
-        <textarea value={text} onChange={e => setText(e.target.value)} className="w-full h-32 p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" />
-      </div>
-      <div>
-        <label className="block text-sm font-bold text-slate-700 mb-2">Regex Pattern</label>
-        <input value={pattern} onChange={e => setPattern(e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500 font-mono" />
-      </div>
-      <div className="bg-slate-900 text-white p-4 rounded-lg">
-        <h3 className="text-sm font-bold text-slate-400 uppercase mb-2">Matches ({matches.length})</h3>
-        {matches.length > 0 ? <pre className="text-green-400 text-sm">{JSON.stringify(matches, null, 2)}</pre> : <p className="text-slate-500 text-sm">No matches found.</p>}
-      </div>
-    </div>
-  );
-}
-
-// --- 2. QR TOOL ---
+// --- 1. QR TOOL ---
 function QRTool() {
   const [text, setText] = useState('https://fileverse.app\nhttps://github.com');
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -92,7 +57,7 @@ function QRTool() {
   );
 }
 
-// --- 3. COLOR TOOL ---
+// --- 2. COLOR TOOL ---
 function ColorTool() {
   const [colors, setColors] = useState<string[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -137,7 +102,7 @@ function ColorTool() {
   );
 }
 
-// --- 4. SIGNATURE TOOL ---
+// --- 3. SIGNATURE TOOL ---
 function SignatureTool() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDrawing = useRef(false);
@@ -168,7 +133,7 @@ function SignatureTool() {
   );
 }
 
-// --- 5. ZIP TOOL ---
+// --- 4. ZIP TOOL ---
 function ZipTool() {
   const [files, setFiles] = useState<File[]>([]);
 
@@ -194,7 +159,7 @@ function ZipTool() {
   );
 }
 
-// --- 6. VOICE & TTS TOOL ---
+// --- 5. VOICE & TTS TOOL ---
 function VoiceTool() {
   const [text, setText] = useState('Type or dictate your text here...');
   const [isRecording, setIsRecording] = useState(false);
@@ -206,11 +171,9 @@ function VoiceTool() {
     const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (SpeechRec) {
       const rec = new SpeechRec();
-      rec.continuous = true;
-      rec.interimResults = true;
+      rec.continuous = true; rec.interimResults = true;
       rec.onresult = (e: any) => {
-        let interim = '';
-        let final = '';
+        let interim = '', final = '';
         for (let i = e.resultIndex; i < e.results.length; i++) {
           if (e.results[i].isFinal) final += e.results[i][0].transcript;
           else interim += e.results[i][0].transcript;
@@ -250,124 +213,7 @@ function VoiceTool() {
   );
 }
 
-// --- 7. CODE FORMATTER TOOL ---
-function FormatTool() {
-  const [input, setInput] = useState('{"name":"fileverse","version":1}');
-  const [output, setOutput] = useState('');
-  const [lang, setLang] = useState('json');
-  const [copied, setCopied] = useState(false);
-
-  const format = () => {
-    try {
-      if (lang === 'json') {
-        setOutput(JSON.stringify(JSON.parse(input), null, 2));
-      } else if (lang === 'html') {
-        setOutput(input.replace(/>\s+</g, '><').trim()); // Basic minify for demo
-      } else {
-        setOutput(input);
-      }
-    } catch (e) {
-      setOutput('Error: Invalid ' + lang.toUpperCase());
-    }
-  };
-
-  const copy = () => { navigator.clipboard.writeText(output); setCopied(true); setTimeout(() => setCopied(false), 2000); };
-
-  return (
-    <div className="space-y-6">
-      <div className="flex gap-4">
-        <select value={lang} onChange={e => setLang(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-cyan-500">
-          <option value="json">JSON</option>
-          <option value="html">HTML</option>
-        </select>
-        <button onClick={format} className="px-4 py-2 bg-cyan-500 text-white rounded-lg font-semibold hover:bg-cyan-400">Format / Minify</button>
-      </div>
-      <div>
-        <label className="block text-sm font-bold text-slate-700 mb-2">Input</label>
-        <textarea value={input} onChange={e => setInput(e.target.value)} className="w-full h-32 p-3 border border-slate-300 rounded-lg outline-none font-mono text-sm" />
-      </div>
-      <div>
-        <div className="flex justify-between items-center mb-2">
-          <label className="block text-sm font-bold text-slate-700">Output</label>
-          <button onClick={copy} className="text-cyan-600 text-sm flex items-center gap-1">{copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />} Copy</button>
-        </div>
-        <pre className="w-full h-32 p-3 bg-slate-900 text-green-400 rounded-lg font-mono text-sm overflow-auto">{output}</pre>
-      </div>
-    </div>
-  );
-}
-
-// --- 8. HASH GENERATOR TOOL ---
-function HashTool() {
-  const [hash, setHash] = useState('');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFile = async (file: File) => {
-    const buffer = await file.arrayBuffer();
-    const digest = await crypto.subtle.digest('SHA-256', buffer);
-    const hexArray = Array.from(new Uint8Array(digest));
-    const hexHash = hexArray.map(b => b.toString(16).padStart(2, '0')).join('');
-    setHash(hexHash);
-  };
-
-  return (
-    <div className="space-y-6">
-      <input type="file" ref={fileInputRef} onChange={e => e.target.files && handleFile(e.target.files[0])} className="hidden" />
-      <button onClick={() => fileInputRef.current?.click()} className="px-4 py-2 bg-slate-800 text-white rounded-lg font-semibold hover:bg-slate-700 flex items-center gap-2">
-        <Download className="w-4 h-4" /> Select File for SHA-256
-      </button>
-      {hash && (
-        <div className="bg-slate-900 p-4 rounded-lg break-all">
-          <h3 className="text-sm font-bold text-slate-400 uppercase mb-2">SHA-256 Hash:</h3>
-          <p className="text-green-400 font-mono text-sm">{hash}</p>
-        </div>
-      )}
-    </div>
-  );
-}
-
-// --- 9. ID PHOTO CROPPER ---
-function IDPhotoTool() {
-  const [imgUrl, setImgUrl] = useState('');
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFile = (file: File) => setImgUrl(URL.createObjectURL(file));
-
-  const cropToPassport = () => {
-    const canvas = canvasRef.current; if (!canvas) return;
-    const ctx = canvas.getContext('2d'); if (!ctx) return;
-    const img = new Image(); img.src = imgUrl;
-    img.onload = () => {
-      canvas.width = 600; canvas.height = 600; // 2x2 inches at 300 DPI
-      ctx.fillStyle = 'white'; ctx.fillRect(0, 0, 600, 600);
-      const size = Math.min(img.width, img.height);
-      const offsetX = (img.width - size) / 2; const offsetY = (img.height - size) / 2;
-      ctx.drawImage(img, offsetX, offsetY, size, size, 0, 0, 600, 600);
-    };
-  };
-
-  const download = () => {
-    const canvas = canvasRef.current; if (!canvas) return;
-    const link = document.createElement('a'); link.download = 'id-photo.png'; link.href = canvas.toDataURL('image/png'); link.click();
-  };
-
-  return (
-    <div className="space-y-6">
-      <input type="file" accept="image/*" ref={fileInputRef} onChange={e => e.target.files && handleFile(e.target.files[0])} className="hidden" />
-      <button onClick={() => fileInputRef.current?.click()} className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-500">Upload Selfie</button>
-      {imgUrl && (
-        <>
-          <button onClick={cropToPassport} className="px-4 py-2 bg-slate-800 text-white rounded-lg font-semibold hover:bg-slate-700">Crop to Passport (2x2 in)</button>
-          <div className="flex justify-center"><canvas ref={canvasRef} className="w-64 h-64 border-2 border-slate-300 rounded-lg shadow-md"></canvas></div>
-          <button onClick={download} className="px-4 py-2 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-500 flex items-center gap-2"><Download className="w-4 h-4" /> Download ID Photo</button>
-        </>
-      )}
-    </div>
-  );
-}
-
-// --- 10. UNIVERSAL TRANSLATOR ---
+// --- 6. UNIVERSAL TRANSLATOR ---
 function TranslateTool() {
   const [text, setText] = useState('Hello, welcome to Fileverse.');
   const [translated, setTranslated] = useState('');
@@ -391,12 +237,7 @@ function TranslateTool() {
       </div>
       <div className="flex gap-4 items-center">
         <select value={targetLang} onChange={e => setTargetLang(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg outline-none">
-          <option value="es">Spanish</option>
-          <option value="fr">French</option>
-          <option value="de">German</option>
-          <option value="zh">Chinese</option>
-          <option value="ja">Japanese</option>
-          <option value="hi">Hindi</option>
+          <option value="es">Spanish</option><option value="fr">French</option><option value="de">German</option><option value="zh">Chinese</option><option value="ja">Japanese</option><option value="hi">Hindi</option>
         </select>
         <button onClick={translate} className="px-4 py-2 bg-teal-500 text-white rounded-lg font-semibold hover:bg-teal-400">Translate</button>
       </div>
