@@ -1,110 +1,108 @@
-import { useEffect, useRef, useState } from 'react';
-import { Camera, X, Copy, Check } from 'lucide-react';
-
-// @ts-ignore
-declare let jsQR: any;
+import { useState, useRef, useEffect } from 'react';
+import { ArrowLeft, Camera, QrCode } from 'lucide-react';
+import jsQR from 'jsqr';
+import QRCode from 'qrcode';
 
 export default function OpticalShare() {
+  const [textToEncode, setTextToEncode] = useState('');
+  const [qrUrl, setQrUrl] = useState('');
+  const [scannedText, setScannedText] = useState('Point camera at QR code...');
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [isScanning, setIsScanning] = useState(false);
-  const [scannedData, setScannedData] = useState('');
-  const [error, setError] = useState('');
-  const [copied, setCopied] = useState(false);
-  const animationRef = useRef<number>();
-  const streamRef = useRef<MediaStream | null>(null);
 
-  const stopCamera = () => {
-    setIsScanning(false);
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach((track: MediaStreamTrack) => track.stop());
-      streamRef.current = null;
+  const generateQR = async () => {
+    if (!textToEncode) return alert('Enter text to generate QR');
+    try {
+      const url = await QRCode.toDataURL(textToEncode);
+      setQrUrl(url);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to generate QR code.');
     }
-    if (videoRef.current) videoRef.current.srcObject = null;
-    if (animationRef.current) cancelAnimationFrame(animationRef.current);
   };
 
-  const startCamera = async () => {
-    setError('');
-    setScannedData('');
+  const startScanning = async () => {
+    setIsScanning(true);
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-      streamRef.current = stream;
-      
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.setAttribute('playsinline', 'true');
-        await videoRef.current.play();
-        setIsScanning(true);
-        tick();
+        videoRef.current.play();
+        requestAnimationFrame(scanFrame);
       }
     } catch (err) {
-      setError('Camera access denied or not available on this device.');
+      alert('Camera access denied or not available.');
+      setIsScanning(false);
     }
   };
 
-  const tick = () => {
-    if (!videoRef.current || !canvasRef.current) return;
-    const video = videoRef.current;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d', { willReadFrequently: true });
-    
-    if (video.readyState === video.HAVE_ENOUGH_DATA) {
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      ctx?.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const imageData = ctx?.getImageData(0, 0, canvas.width, canvas.height);
-      
-      if (imageData) {
-        const code = jsQR(imageData.data, imageData.width, imageData.height, { inversionAttempts: 'dontInvert' });
+  const scanFrame = () => {
+    if (!isScanning) return;
+    if (videoRef.current && canvasRef.current) {
+      const video = videoRef.current;
+      const canvas = canvasRef.current;
+      const ctx = canvas.getContext('2d');
+      if (ctx && video.readyState === video.HAVE_ENOUGH_DATA) {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const code = jsQR(imageData.data, imageData.width, imageData.height);
         if (code) {
-          setScannedData(code.data);
-          stopCamera();
+          setScannedText(code.data);
+          setIsScanning(false);
+          const stream = video.srcObject as MediaStream;
+          stream.getTracks().forEach(track => track.stop());
           return;
         }
       }
     }
-    animationRef.current = requestAnimationFrame(tick);
+    requestAnimationFrame(scanFrame);
   };
 
-  useEffect(() => { return () => stopCamera(); }, []);
-
-  const copyData = () => { navigator.clipboard.writeText(scannedData); setCopied(true); setTimeout(() => setCopied(false), 2000); };
+  useEffect(() => {
+    return () => {
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+      }
+    };
+  }, []);
 
   return (
-    <div className="min-h-screen bg-slate-900 flex flex-col items-center justify-center p-6 text-white">
-      <div className="w-full max-w-xl bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 overflow-hidden">
-        <div className="p-6 border-b border-slate-700 text-center">
-          <Camera className="w-10 h-10 text-amber-400 mx-auto mb-2" />
-          <h2 className="text-xl font-bold">Optical Data Transfer</h2>
-          <p className="text-sm text-slate-400 mt-1">Scan a Fileverse QR code to transfer data without internet.</p>
+    <div className="min-h-screen bg-slate-950 text-white p-4">
+      <button onClick={() => window.location.href = '/'} className="flex items-center gap-2 text-slate-400 hover:text-white mb-6">
+        <ArrowLeft /> Back
+      </button>
+      <h1 className="text-2xl font-bold mb-6 flex items-center gap-2"><Camera /> Optical Share</h1>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div className="bg-slate-900 p-6 rounded-2xl">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2"><QrCode /> Generate QR</h2>
+          <textarea 
+            value={textToEncode} 
+            onChange={(e) => setTextToEncode(e.target.value)} 
+            className="w-full h-24 p-3 bg-slate-800 rounded-lg mb-4 outline-none resize-none border border-slate-700" 
+            placeholder="Enter text or link to encode..."
+          />
+          <button onClick={generateQR} className="w-full py-3 bg-indigo-600 rounded-lg font-semibold hover:bg-indigo-700">Generate</button>
+          {qrUrl && <img src={qrUrl} alt="Generated QR Code" className="w-48 h-48 mx-auto mt-4 bg-white p-2 rounded-lg" />}
         </div>
-        <div className="p-8">
-          {!isScanning && !scannedData && (
-            <button onClick={startCamera} className="w-full py-3 bg-amber-500 hover:bg-amber-400 text-slate-900 rounded-lg font-semibold flex items-center justify-center gap-2"><Camera className="w-5 h-5" /> Start Camera</button>
-          )}
-          {isScanning && (
-            <div className="relative aspect-square w-full bg-black rounded-lg overflow-hidden flex items-center justify-center">
+
+        <div className="bg-slate-900 p-6 rounded-2xl">
+          <h2 className="text-xl font-semibold mb-4 flex items-center gap-2"><Camera /> Scan QR</h2>
+          {!isScanning ? (
+            <button onClick={startScanning} className="w-full py-3 bg-slate-700 rounded-lg font-semibold hover:bg-slate-600">Start Camera Scan</button>
+          ) : (
+            <div className="relative aspect-square w-full bg-black rounded-lg overflow-hidden">
               <video ref={videoRef} className="w-full h-full object-cover" muted playsInline />
               <canvas ref={canvasRef} className="hidden" />
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-3/4 h-3/4 border-4 border-amber-400 rounded-lg shadow-2xl"></div>
-              </div>
-              <button onClick={stopCamera} className="absolute top-4 right-4 p-2 bg-slate-900/80 rounded-full hover:bg-slate-800"><X className="w-6 h-6" /></button>
             </div>
           )}
-          {scannedData && (
-            <div className="space-y-4">
-              <div className="bg-green-900/20 border border-green-700 text-green-400 p-4 rounded-lg text-sm text-center"><Check className="w-6 h-6 mx-auto mb-2" /> Data transferred successfully!</div>
-              <div className="bg-slate-900 p-4 rounded-lg border border-slate-700">
-                <p className="text-xs text-slate-400 mb-2">Received Payload:</p>
-                <textarea value={scannedData} readOnly className="w-full h-32 p-2 bg-transparent text-slate-200 text-xs outline-none resize-none" />
-                <button onClick={copyData} className="mt-2 flex items-center gap-2 text-amber-400 text-sm font-semibold hover:text-amber-300">{copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />} Copy Data</button>
-              </div>
-              <button onClick={() => { setScannedData(''); startCamera(); }} className="w-full py-3 bg-slate-700 hover:bg-slate-600 rounded-lg font-semibold">Scan Another</button>
-            </div>
-          )}
-          {error && <p className="text-red-400 text-sm text-center mt-4">{error}</p>}
+          <div className="mt-4 p-4 bg-slate-800 rounded-lg text-sm text-slate-300 break-all">
+            <strong>Result:</strong> {scannedText}
+          </div>
         </div>
       </div>
     </div>
