@@ -1,5 +1,5 @@
 import { useNavigate } from 'react-router-dom';
-import { Regex, QrCode, Palette, PenTool, Archive, ArrowLeft } from 'lucide-react';
+import { Regex, QrCode, Palette, PenTool, Archive, ArrowLeft, Mic, Braces, Fingerprint, UserSquare, Languages } from 'lucide-react';
 
 export default function ToolsHub() {
   const navigate = useNavigate();
@@ -10,6 +10,11 @@ export default function ToolsHub() {
     { id: 'color', name: 'Color Extractor', desc: 'Get HEX codes from images', icon: <Palette />, color: 'bg-purple-500' },
     { id: 'signature', name: 'Signature Maker', desc: 'Draw & export transparent PNG', icon: <PenTool />, color: 'bg-red-500' },
     { id: 'zip', name: 'Zip Builder', desc: 'Compress files client-side', icon: <Archive />, color: 'bg-amber-500' },
+    { id: 'voice', name: 'Voice & TTS', desc: 'Dictation & Text-to-Speech', icon: <Mic />, color: 'bg-pink-500' },
+    { id: 'format', name: 'Code Formatter', desc: 'Beautify JSON/HTML/SQL', icon: <Braces />, color: 'bg-cyan-500' },
+    { id: 'hash', name: 'Hash Generator', desc: 'MD5 & SHA-256 Checksums', icon: <Fingerprint />, color: 'bg-slate-800' },
+    { id: 'idphoto', name: 'ID Photo Cropper', desc: 'Passport/Visa photo maker', icon: <UserSquare />, color: 'bg-indigo-500' },
+    { id: 'translate', name: 'Translator', desc: 'Translate text instantly', icon: <Languages />, color: 'bg-teal-500' },
   ];
 
   return (
