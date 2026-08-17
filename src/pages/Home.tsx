@@ -1,6 +1,6 @@
 import { useCallback, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UploadCloud, FileText, Sheet, FileImage, FileType2, Sparkles, ArrowRight, Shield, Camera } from 'lucide-react';
+import { UploadCloud, FileText, Sheet, FileImage, FileType2, Sparkles, ArrowRight, Shield, Camera, Wrench } from 'lucide-react';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -50,8 +50,8 @@ export default function Home() {
           </div>
           <h1 className="text-xl font-bold tracking-tight text-slate-900">Fileverse</h1>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
-          <Sparkles className="w-4 h-4" /> AI Tools
+        <button onClick={() => navigate('/tools')} className="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-indigo-600 bg-indigo-50 rounded-lg hover:bg-indigo-100 transition-colors">
+          <Wrench className="w-4 h-4" /> Pro Tools
         </button>
       </header>
 
