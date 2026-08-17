@@ -1,6 +1,6 @@
 import { useCallback, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UploadCloud, FileText, Sheet, FileImage, FileType2, Sparkles, ArrowRight } from 'lucide-react';
+import { UploadCloud, FileText, Sheet, FileImage, FileType2, Sparkles, ArrowRight, Shield, Camera } from 'lucide-react';
 
 export default function Home() {
   const navigate = useNavigate();
@@ -65,12 +65,7 @@ export default function Home() {
             className={`relative w-full max-w-2xl border-2 border-dashed rounded-3xl p-16 text-center transition-all duration-300 cursor-pointer overflow-hidden group
               ${isDragging ? 'border-indigo-600 bg-indigo-50 scale-105 shadow-xl shadow-indigo-100' : 'border-slate-300 bg-white hover:border-indigo-400 hover:shadow-lg'}`}
           >
-            <input 
-              type="file" 
-              ref={fileInputRef} 
-              className="hidden" 
-              onChange={(e) => e.target.files && handleFile(e.target.files[0])} 
-            />
+            <input type="file" ref={fileInputRef} className="hidden" onChange={(e) => e.target.files && handleFile(e.target.files[0])} />
             <div className="flex justify-center mb-6 transition-transform duration-300 group-hover:scale-110">
               <div className={`p-6 rounded-full transition-colors duration-300 ${isDragging ? 'bg-indigo-600' : 'bg-indigo-100 group-hover:bg-indigo-200'}`}>
                 <UploadCloud className={`w-12 h-12 transition-colors duration-300 ${isDragging ? 'text-white' : 'text-indigo-600'}`} />
@@ -83,11 +78,13 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mt-12 w-full max-w-2xl">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-5 mt-12 w-full max-w-2xl">
             <ToolCard icon={<FileText />} label="Word Editor" desc="Documents & Rich Text" color="bg-blue-500" onClick={() => handleButtonClick('word')} />
             <ToolCard icon={<Sheet />} label="Excel Editor" desc="Spreadsheets & Grids" color="bg-green-500" onClick={() => handleButtonClick('excel')} />
             <ToolCard icon={<FileType2 />} label="PDF Editor" desc="View & Annotate" color="bg-red-500" onClick={() => handleButtonClick('pdf')} />
             <ToolCard icon={<FileImage />} label="Image Editor" desc="Photos & Graphics" color="bg-purple-500" onClick={() => handleButtonClick('image')} />
+            <ToolCard icon={<Shield />} label="Secure Share" desc="Encrypt & Generate Link" color="bg-slate-800" onClick={() => handleButtonClick('decrypt')} />
+            <ToolCard icon={<Camera />} label="Optical Transfer" desc="Camera Air-Gapped Share" color="bg-amber-500" onClick={() => handleButtonClick('optical-share')} />
           </div>
         </div>
 
@@ -104,10 +101,7 @@ export default function Home() {
 }
 
 const ToolCard = ({ icon, label, desc, color, onClick }: { icon: React.ReactNode; label: string; desc: string; color: string; onClick: () => void }) => (
-  <button 
-    onClick={onClick}
-    className="group bg-white border border-slate-200 rounded-2xl p-6 flex flex-col items-start gap-4 transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-xl hover:border-transparent text-left"
-  >
+  <button onClick={onClick} className="group bg-white border border-slate-200 rounded-2xl p-6 flex flex-col items-start gap-4 transition-all duration-300 ease-out hover:-translate-y-2 hover:shadow-xl hover:border-transparent text-left">
     <div className={`p-3 ${color} bg-opacity-10 group-hover:bg-opacity-100 rounded-xl transition-all duration-300`}>
       <span className={`[&>svg]:w-6 [&>svg]:h-6 ${color.replace('bg-', 'text-')} group-hover:text-white transition-colors duration-300`}>{icon}</span>
     </div>
