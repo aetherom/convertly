@@ -5,7 +5,6 @@ import Home from './pages/Home';
 import ToolsHub from './pages/ToolsHub';
 import { ErrorBoundary } from './components/ErrorBoundary';
 
-// Lazy load heavy editor engines (Peak Performance)
 const WordEditor = lazy(() => import('./pages/WordEditor'));
 const ExcelEditor = lazy(() => import('./pages/ExcelEditor'));
 const PdfEditor = lazy(() => import('./pages/PdfEditor'));
