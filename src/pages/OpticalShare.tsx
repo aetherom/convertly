@@ -4,7 +4,6 @@ export default function OpticalShare() {
       <div className="bg-slate-800 p-8 rounded-xl shadow-2xl border border-slate-700">
         <h2 className="text-2xl font-bold mb-4">Optical Transfer (LightShare)</h2>
         <p className="text-slate-400">Initializing camera for offline data transfer...</p>
-        {/* Camera API and QR grid logic will go here in Phase 3 */}
       </div>
     </div>
   );
