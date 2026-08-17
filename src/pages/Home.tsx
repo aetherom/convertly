@@ -38,7 +38,6 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Premium Header */}
       <header className="bg-white border-b border-slate-200 py-4 px-6 flex items-center justify-between sticky top-0 z-50 backdrop-blur-md bg-white/80">
         <div className="flex items-center gap-3">
           <div className="p-2 bg-indigo-600 rounded-xl shadow-lg shadow-indigo-200">
@@ -58,8 +57,6 @@ export default function Home() {
 
       <main className="flex-1 flex flex-col lg:flex-row max-w-7xl mx-auto w-full p-6 gap-8">
         <div className="flex-1 flex flex-col items-center justify-center py-12">
-          
-          {/* Unmissable Drag & Drop Zone */}
           <div 
             onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); }}
             onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); }}
@@ -86,7 +83,6 @@ export default function Home() {
             </div>
           </div>
 
-          {/* Tool Buttons */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mt-12 w-full max-w-2xl">
             <ToolCard icon={<FileText />} label="Word Editor" desc="Documents & Rich Text" color="bg-blue-500" onClick={() => handleButtonClick('word')} />
             <ToolCard icon={<Sheet />} label="Excel Editor" desc="Spreadsheets & Grids" color="bg-green-500" onClick={() => handleButtonClick('excel')} />
@@ -95,7 +91,6 @@ export default function Home() {
           </div>
         </div>
 
-        {/* Ad Space */}
         <aside className="w-full lg:w-72 bg-white border border-slate-200 rounded-2xl p-6 hidden lg:flex flex-col shadow-sm">
           <div className="flex-1 flex flex-col items-center justify-center text-center text-slate-400 rounded-xl border-dashed border border-slate-200 p-6">
             <span className="text-xs font-semibold tracking-wider uppercase mb-2">Sponsored</span>
