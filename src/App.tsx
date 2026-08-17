@@ -1,8 +1,10 @@
-import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useState, useEffect } from 'react';
 import { ShieldCheck, AlertTriangle, X } from 'lucide-react';
 import Home from './pages/Home';
-import Editor from './pages/Editor';
+import WordEditor from './pages/WordEditor';
+import DecryptGate from './pages/DecryptGate';
+import OpticalShare from './pages/OpticalShare';
 
 const ConsentGate = ({ children }: { children: React.ReactNode }) => {
   const [hasAccess, setHasAccess] = useState<boolean | null>(null);
@@ -37,7 +39,7 @@ const ConsentGate = ({ children }: { children: React.ReactNode }) => {
             <h2 className="text-2xl font-bold mb-2">Legal Consent & Age Verification</h2>
             <p className="text-slate-400 text-sm mb-6">
               By using Fileverse, you confirm you are at least 16 years old. 
-              All file processing happens locally on your device. We do not collect, store, or transmit your files or personal data.
+              All file processing and sharing happens locally on your device. We do not collect, store, or transmit your files or personal data.
             </p>
             <div className="flex flex-col gap-3 w-full">
               <button onClick={handleAccept} className="w-full bg-indigo-600 hover:bg-indigo-500 py-3 rounded-lg font-semibold flex items-center justify-center gap-2">
@@ -62,7 +64,9 @@ export default function App() {
       <ConsentGate>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/editor/:type" element={<Editor />} />
+          <Route path="/editor/word" element={<WordEditor />} />
+          <Route path="/decrypt" element={<DecryptGate />} />
+          <Route path="/optical-share" element={<OpticalShare />} />
         </Routes>
       </ConsentGate>
     </BrowserRouter>
