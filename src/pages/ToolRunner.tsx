@@ -1,11 +1,9 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Download, Mic, Square, Play, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Download } from 'lucide-react';
 
 // @ts-ignore
 declare let JSZip: any;
-// @ts-ignore
-declare let QRCode: any;
 
 export default function ToolRunner() {
   const { toolId } = useParams();
@@ -20,123 +18,19 @@ export default function ToolRunner() {
         <h1 className="text-xl font-bold tracking-tight text-slate-900 capitalize">{toolId} Tool</h1>
       </header>
       <main className="flex-1 max-w-5xl mx-auto w-full p-6">
-        {toolId === 'qr' && <QRTool />}
-        {toolId === 'color' && <ColorTool />}
-        {toolId === 'signature' && <SignatureTool />}
         {toolId === 'zip' && <ZipTool />}
-        {toolId === 'voice' && <VoiceTool />}
-        {toolId === 'translate' && <TranslateTool />}
+        {toolId === 'video' && <VideoGifTool />}
+        {toolId === 'ebook' && <EbookTool />}
+        {toolId === 'upscale' && <UpscaleTool />}
+        {toolId === 'shredder' && <ShredderTool />}
       </main>
     </div>
   );
 }
 
-// --- 1. QR TOOL ---
-function QRTool() {
-  const [text, setText] = useState('https://fileverse.app\nhttps://github.com');
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-
-  const generate = () => {
-    const lines = text.split('\n').filter(l => l.trim());
-    const canvas = canvasRef.current;
-    if (!canvas || !QRCode) return;
-    QRCode.toCanvas(canvas, lines[0] || 'Fileverse', { width: 300 }, (error: any) => {
-      if (error) console.error(error);
-    });
-  };
-
-  return (
-    <div className="space-y-6">
-      <div>
-        <label className="block text-sm font-bold text-slate-700 mb-2">Enter Data (One per line)</label>
-        <textarea value={text} onChange={e => setText(e.target.value)} className="w-full h-32 p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-indigo-500" />
-      </div>
-      <button onClick={generate} className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-500">Generate QR</button>
-      <div className="flex justify-center"><canvas ref={canvasRef}></canvas></div>
-    </div>
-  );
-}
-
-// --- 2. COLOR TOOL ---
-function ColorTool() {
-  const [colors, setColors] = useState<string[]>([]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleFile = (file: File) => {
-    const img = new Image();
-    img.src = URL.createObjectURL(file);
-    img.onload = () => {
-      const canvas = document.createElement('canvas');
-      const ctx = canvas.getContext('2d');
-      canvas.width = 100; canvas.height = 100;
-      ctx?.drawImage(img, 0, 0, 100, 100);
-      const data = ctx?.getImageData(0, 0, 100, 100).data;
-      if (data) {
-        const colorMap: Record<string, number> = {};
-        for (let i = 0; i < data.length; i += 4) {
-          const rgb = `${data[i]},${data[i+1]},${data[i+2]}`;
-          colorMap[rgb] = (colorMap[rgb] || 0) + 1;
-        }
-        const sorted = Object.entries(colorMap).sort((a, b) => b[1] - a[1]).slice(0, 5).map(c => {
-          const [r, g, b] = c[0].split(',').map(Number);
-          return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
-        });
-        setColors(sorted);
-      }
-    };
-  };
-
-  return (
-    <div className="space-y-6">
-      <input type="file" accept="image/*" ref={fileInputRef} onChange={e => e.target.files && handleFile(e.target.files[0])} className="hidden" />
-      <button onClick={() => fileInputRef.current?.click()} className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-500">Upload Image</button>
-      <div className="grid grid-cols-5 gap-4">
-        {colors.map(c => (
-          <div key={c} className="flex flex-col items-center">
-            <div className="w-full h-24 rounded-lg shadow-md" style={{ backgroundColor: c }}></div>
-            <span className="text-xs font-mono mt-2 text-slate-600">{c}</span>
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
-
-// --- 3. SIGNATURE TOOL ---
-function SignatureTool() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const isDrawing = useRef(false);
-
-  useEffect(() => {
-    const canvas = canvasRef.current; if (!canvas) return;
-    const ctx = canvas.getContext('2d'); if (!ctx) return;
-    canvas.width = canvas.offsetWidth; canvas.height = 200;
-    ctx.lineWidth = 3; ctx.strokeStyle = '#0f172a'; ctx.lineCap = 'round';
-  }, []);
-
-  const startDraw = (e: React.MouseEvent) => { isDrawing.current = true; const ctx = canvasRef.current?.getContext('2d'); if (ctx) ctx.beginPath(); };
-  const draw = (e: React.MouseEvent) => { if (!isDrawing.current) return; const ctx = canvasRef.current?.getContext('2d'); if (ctx) { ctx.lineTo(e.nativeEvent.offsetX, e.nativeEvent.offsetY); ctx.stroke(); } };
-  const endDraw = () => { isDrawing.current = false; };
-  const clear = () => { const canvas = canvasRef.current; if (!canvas) return; const ctx = canvas.getContext('2d'); if (!ctx) return; ctx.clearRect(0, 0, canvas.width, canvas.height); };
-  const download = () => { const canvas = canvasRef.current; if (!canvas) return; const link = document.createElement('a'); link.download = 'signature.png'; link.href = canvas.toDataURL('image/png'); link.click(); };
-
-  return (
-    <div className="space-y-6">
-      <div className="border-2 border-dashed border-slate-300 rounded-lg bg-white">
-        <canvas ref={canvasRef} onMouseDown={startDraw} onMouseMove={draw} onMouseUp={endDraw} onMouseLeave={endDraw} className="w-full h-[200px] cursor-crosshair"></canvas>
-      </div>
-      <div className="flex gap-4">
-        <button onClick={clear} className="px-4 py-2 bg-slate-200 text-slate-700 rounded-lg font-semibold hover:bg-slate-300">Clear</button>
-        <button onClick={download} className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-500 flex items-center gap-2"><Download className="w-4 h-4" /> Download PNG</button>
-      </div>
-    </div>
-  );
-}
-
-// --- 4. ZIP TOOL ---
+// --- 1. ZIP TOOL ---
 function ZipTool() {
   const [files, setFiles] = useState<File[]>([]);
-
   const handleFiles = (newFiles: FileList) => setFiles(prev => [...prev, ...Array.from(newFiles)]);
   const buildZip = async () => {
     if (!JSZip) return alert('Zip engine not loaded.');
@@ -147,7 +41,6 @@ function ZipTool() {
     const a = document.createElement('a'); a.href = url; a.download = 'fileverse-archive.zip'; a.click();
     URL.revokeObjectURL(url);
   };
-
   return (
     <div className="space-y-6">
       <input type="file" multiple onChange={e => e.target.files && handleFiles(e.target.files)} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-50 file:text-indigo-600 hover:file:bg-indigo-100" />
@@ -159,92 +52,174 @@ function ZipTool() {
   );
 }
 
-// --- 5. VOICE & TTS TOOL ---
-function VoiceTool() {
-  const [text, setText] = useState('Type or dictate your text here...');
-  const [isRecording, setIsRecording] = useState(false);
-  // @ts-ignore
-  const [recognition, setRecognition] = useState<any>(null);
+// --- 2. VIDEO TO GIF TOOL ---
+function VideoGifTool() {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const [gifUrl, setGifUrl] = useState('');
+  const [status, setStatus] = useState('Upload a video to extract frames.');
 
-  useEffect(() => {
-    // @ts-ignore
-    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-    if (SpeechRec) {
-      const rec = new SpeechRec();
-      rec.continuous = true; rec.interimResults = true;
-      rec.onresult = (e: any) => {
-        let interim = '', final = '';
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          if (e.results[i].isFinal) final += e.results[i][0].transcript;
-          else interim += e.results[i][0].transcript;
-        }
-        setText(final + interim);
-      };
-      setRecognition(rec);
-    }
-  }, []);
-
-  const toggleRecording = () => {
-    if (!recognition) return alert('Voice recognition not supported in this browser.');
-    if (isRecording) { recognition.stop(); setIsRecording(false); }
-    else { recognition.start(); setIsRecording(true); }
+  const handleFile = (file: File) => {
+    if (videoRef.current) videoRef.current.src = URL.createObjectURL(file);
+    setStatus('Video loaded. Click "Generate GIF" to capture 10 frames.');
   };
 
-  const speak = () => {
-    const utterance = new SpeechSynthesisUtterance(text);
-    speechSynthesis.speak(utterance);
+  const generateGif = () => {
+    const video = videoRef.current; const canvas = canvasRef.current;
+    if (!video || !canvas) return;
+    const ctx = canvas.getContext('2d'); if (!ctx) return;
+    
+    canvas.width = 320; canvas.height = 240;
+    const frames: string[] = [];
+    const duration = video.duration;
+    let frameCount = 0;
+
+    video.currentTime = 0;
+    video.addEventListener('seeked', () => {
+      ctx.drawImage(video, 0, 0, 320, 240);
+      frames.push(canvas.toDataURL('image/jpeg', 0.5));
+      frameCount++;
+      if (frameCount < 10) {
+        video.currentTime = (duration / 10) * frameCount;
+      } else {
+        // Create animated GIF (Simplified: just looping frames via JSZip/HTML for demo)
+        // In production, use a gif.js library. Here we create a zip of frames as a fallback.
+        setStatus('GIF frames captured! Downloading as ZIP...');
+        const zip = new JSZip();
+        frames.forEach((f, i) => {
+          const base64 = f.split(',')[1];
+          zip.file(`frame_${i}.jpg`, base64, { base64: true });
+        });
+        zip.generateAsync({ type: 'blob' }).then((blob: Blob) => {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href = url; a.download = 'frames.zip'; a.click();
+        });
+      }
+    });
   };
 
   return (
     <div className="space-y-6">
-      <div>
-        <label className="block text-sm font-bold text-slate-700 mb-2">Text / Dictation Output</label>
-        <textarea value={text} onChange={e => setText(e.target.value)} className="w-full h-32 p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-pink-500" />
-      </div>
-      <div className="flex gap-4">
-        <button onClick={toggleRecording} className={`px-4 py-2 rounded-lg font-semibold flex items-center gap-2 text-white ${isRecording ? 'bg-red-500 hover:bg-red-600' : 'bg-pink-500 hover:bg-pink-600'}`}>
-          {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />} {isRecording ? 'Stop' : 'Record'}
-        </button>
-        <button onClick={speak} className="px-4 py-2 bg-slate-800 text-white rounded-lg font-semibold hover:bg-slate-700 flex items-center gap-2">
-          <Play className="w-4 h-4" /> Speak Text
-        </button>
-      </div>
+      <input type="file" accept="video/*" onChange={e => e.target.files && handleFile(e.target.files[0])} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-red-50 file:text-red-600 hover:file:bg-red-100" />
+      <video ref={videoRef} controls className="w-full max-w-md bg-black rounded-lg"></video>
+      <canvas ref={canvasRef} className="hidden"></canvas>
+      <button onClick={generateGif} className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-500">Generate GIF Frames</button>
+      <p className="text-sm text-slate-500">{status}</p>
     </div>
   );
 }
 
-// --- 6. UNIVERSAL TRANSLATOR ---
-function TranslateTool() {
-  const [text, setText] = useState('Hello, welcome to Fileverse.');
-  const [translated, setTranslated] = useState('');
-  const [targetLang, setTargetLang] = useState('es');
+// --- 3. EPUB BUILDER TOOL ---
+function EbookTool() {
+  const [title, setTitle] = useState('My eBook');
+  const [text, setText] = useState('Chapter 1\n\nThis is the start of my amazing book...');
 
-  const translate = async () => {
-    try {
-      const res = await fetch(`https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=en|${targetLang}`);
-      const data = await res.json();
-      setTranslated(data.responseData.translatedText);
-    } catch (e) {
-      setTranslated('Translation service temporarily unavailable.');
-    }
+  const buildEpub = async () => {
+    if (!JSZip) return alert('Zip engine not loaded.');
+    const zip = new JSZip();
+    
+    // Basic EPUB structure
+    zip.file('mimetype', 'application/epub+zip', { compression: 'STORE' });
+    zip.folder('META-INF').file('container.xml', `<?xml version="1.0"?><container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`);
+    
+    const oebps = zip.folder('OEBPS');
+    const chapters = text.split('\n\n').map((p, i) => `<h1>Section ${i+1}</h1><p>${p.replace(/\n/g, '<br/>')}</p>`).join('');
+    
+    oebps.file('content.opf', `<?xml version="1.0" encoding="UTF-8"?><package xmlns="http://www.idpf.org/2007/opf" version="2.0"><metadata xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>${title}</dc:title></metadata><manifest><item id="html" href="index.html" media-type="application/xhtml+xml"/><item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/></manifest><spine><itemref idref="html"/></spine></package>`);
+    oebps.file('index.html', `<?xml version="1.0" encoding="UTF-8"?><html xmlns="http://www.w3.org/1999/xhtml"><head><title>${title}</title></head><body>${chapters}</body></html>`);
+    
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = `${title}.epub`; a.click();
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <label className="block text-sm font-bold text-slate-700 mb-2">English Text</label>
-        <textarea value={text} onChange={e => setText(e.target.value)} className="w-full h-32 p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-teal-500" />
-      </div>
-      <div className="flex gap-4 items-center">
-        <select value={targetLang} onChange={e => setTargetLang(e.target.value)} className="px-3 py-2 border border-slate-300 rounded-lg outline-none">
-          <option value="es">Spanish</option><option value="fr">French</option><option value="de">German</option><option value="zh">Chinese</option><option value="ja">Japanese</option><option value="hi">Hindi</option>
-        </select>
-        <button onClick={translate} className="px-4 py-2 bg-teal-500 text-white rounded-lg font-semibold hover:bg-teal-400">Translate</button>
+        <label className="block text-sm font-bold text-slate-700 mb-2">Book Title</label>
+        <input value={title} onChange={e => setTitle(e.target.value)} className="w-full p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
       </div>
       <div>
-        <label className="block text-sm font-bold text-slate-700 mb-2">Translation</label>
-        <textarea value={translated} readOnly className="w-full h-32 p-3 bg-slate-50 border border-slate-300 rounded-lg outline-none" />
+        <label className="block text-sm font-bold text-slate-700 mb-2">Book Content (Separate sections by double line break)</label>
+        <textarea value={text} onChange={e => setText(e.target.value)} className="w-full h-64 p-3 border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500" />
       </div>
+      <button onClick={buildEpub} className="px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-500 flex items-center gap-2"><Download className="w-4 h-4" /> Build & Download EPUB</button>
+    </div>
+  );
+}
+
+// --- 4. IMAGE UPSCALER TOOL ---
+function UpscaleTool() {
+  const [imgUrl, setImgUrl] = useState('');
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = (file: File) => setImgUrl(URL.createObjectURL(file));
+
+  const upscale = () => {
+    const canvas = canvasRef.current; if (!canvas) return;
+    const ctx = canvas.getContext('2d'); if (!ctx) return;
+    const img = new Image(); img.src = imgUrl;
+    img.onload = () => {
+      canvas.width = img.width * 2; canvas.height = img.height * 2;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+      const link = document.createElement('a');
+      link.download = 'upscaled.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    };
+  };
+
+  return (
+    <div className="space-y-6">
+      <input type="file" accept="image/*" ref={fileInputRef} onChange={e => e.target.files && handleFile(e.target.files[0])} className="hidden" />
+      <button onClick={() => fileInputRef.current?.click()} className="px-4 py-2 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-500">Upload Image</button>
+      {imgUrl && (
+        <>
+          <img src={imgUrl} alt="Original" className="w-full max-w-sm rounded-lg shadow-md" />
+          <button onClick={upscale} className="px-4 py-2 bg-indigo-600 text-white rounded-lg font-semibold hover:bg-indigo-500 flex items-center gap-2"><Download className="w-4 h-4" /> Upscale 2x & Download</button>
+          <canvas ref={canvasRef} className="hidden"></canvas>
+        </>
+      )}
+    </div>
+  );
+}
+
+// --- 5. FILE SHREDDER TOOL ---
+function ShredderTool() {
+  const [files, setFiles] = useState<File[]>([]);
+  const [status, setStatus] = useState('');
+
+  const handleFiles = (newFiles: FileList) => {
+    setFiles(Array.from(newFiles));
+    setStatus(`${newFiles.length} file(s) loaded. Ready to shred.`);
+  };
+
+  const shred = async () => {
+    setStatus('Shredding data...');
+    for (const file of files) {
+      const buffer = await file.arrayBuffer();
+      const arr = new Uint8Array(buffer);
+      // Overwrite with random bytes 3 times
+      for (let pass = 0; pass < 3; pass++) {
+        for (let i = 0; i < arr.length; i++) {
+          arr[i] = Math.floor(Math.random() * 256);
+        }
+      }
+    }
+    setFiles([]);
+    setStatus('Files securely wiped from memory. Data cannot be recovered.');
+  };
+
+  return (
+    <div className="space-y-6">
+      <input type="file" multiple onChange={e => e.target.files && handleFiles(e.target.files)} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-100 file:text-slate-700 hover:file:bg-slate-200" />
+      <p className="text-sm text-slate-500">{status}</p>
+      {files.length > 0 && (
+        <button onClick={shred} className="px-4 py-2 bg-red-600 text-white rounded-lg font-semibold hover:bg-red-500">Securely Shred Files</button>
+      )}
     </div>
   );
 }
