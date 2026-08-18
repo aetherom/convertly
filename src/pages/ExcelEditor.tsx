@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ArrowLeft, Download } from 'lucide-react';
 import * as XLSX from 'xlsx';
@@ -6,7 +6,6 @@ import * as XLSX from 'xlsx';
 export default function ExcelEditor() {
   const location = useLocation();
   const [data, setData] = useState<any[][]>([['No data loaded']]);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!location.state || !location.state.file) {
