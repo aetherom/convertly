@@ -25,7 +25,6 @@ export default function PdfEditor() {
     reader.onload = async (e) => {
       try {
         const arrayBuffer = e.target?.result as ArrayBuffer;
-        // Fix: Clone the buffer to prevent detached ArrayBuffer crash in Vite
         const clonedBuffer = arrayBuffer.slice(0);
         const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(clonedBuffer) });
         const pdf = await loadingTask.promise;
@@ -33,7 +32,7 @@ export default function PdfEditor() {
         setNumPages(pdf.numPages);
       } catch (err) {
         console.error("PDF Load Error:", err);
-        alert("Failed to load PDF. It might be corrupted or password protected.");
+        alert("Failed to load PDF.");
         window.location.href = '/';
       }
     };
@@ -51,11 +50,7 @@ export default function PdfEditor() {
           if (context) {
             canvas.height = viewport.height;
             canvas.width = viewport.width;
-            const renderContext = {
-              canvasContext: context,
-              viewport: viewport,
-            };
-            await page.render(renderContext).promise;
+            await page.render({ canvasContext: context, viewport }).promise;
           }
         } catch (err) {
           console.error("Render Error:", err);
