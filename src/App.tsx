@@ -3,8 +3,10 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { ShieldCheck, AlertTriangle, Loader2 } from 'lucide-react';
 import Home from './pages/Home';
 import ToolsHub from './pages/ToolsHub';
+import Settings from './pages/Settings'; // <-- Added Settings Import
 import { ErrorBoundary } from './components/ErrorBoundary';
 
+// Lazy load heavy editor engines
 const WordEditor = lazy(() => import('./pages/WordEditor'));
 const ExcelEditor = lazy(() => import('./pages/ExcelEditor'));
 const PdfEditor = lazy(() => import('./pages/PdfEditor'));
@@ -76,6 +78,7 @@ export default function App() {
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/tools" element={<ToolsHub />} />
+              <Route path="/settings" element={<Settings />} /> {/* <-- Added Route */}
               <Route path="/word-editor" element={<WordEditor />} />
               <Route path="/excel-editor" element={<ExcelEditor />} />
               <Route path="/pdf-editor" element={<PdfEditor />} />
