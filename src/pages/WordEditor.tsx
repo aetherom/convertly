@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { ArrowLeft, Download, Bold, Italic, Underline, AlignLeft, AlignCenter, AlignRight } from 'lucide-react';
 import { useEditor, EditorContent } from '@tiptap/react';
@@ -37,7 +37,6 @@ export default function WordEditor() {
       
       if (file.name.endsWith('.docx')) {
         const arrayBuffer = await file.arrayBuffer();
-        // Use mammoth to convert docx to HTML
         mammoth.convertToHtml({ arrayBuffer })
           .then((result: any) => {
             if (editor) editor.commands.setContent(result.value);
@@ -51,7 +50,6 @@ export default function WordEditor() {
     importFile();
   }, [location.state, editor]);
 
-  // Check for missing file
   useEffect(() => {
     if (!location.state || !location.state.file) {
       window.location.href = '/';
