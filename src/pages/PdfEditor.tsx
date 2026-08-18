@@ -25,6 +25,7 @@ export default function PdfEditor() {
     reader.onload = async (e) => {
       try {
         const arrayBuffer = e.target?.result as ArrayBuffer;
+        // FIX: Clone buffer to prevent detached ArrayBuffer crash in Vite
         const clonedBuffer = arrayBuffer.slice(0);
         const loadingTask = pdfjsLib.getDocument({ data: new Uint8Array(clonedBuffer) });
         const pdf = await loadingTask.promise;
