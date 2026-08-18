@@ -1,40 +1,11 @@
 import { useCallback, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { UploadCloud, FileText, Sheet, FileImage, FileType2, Shield, Camera, Wrench, RefreshCw } from 'lucide-react';
+import { UploadCloud, FileText, Sheet, FileImage, FileType2, Shield, Camera, Wrench, Settings as SettingsIcon } from 'lucide-react';
 
 export default function Home() {
   const navigate = useNavigate();
   const [isDragging, setIsDragging] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleClearCache = async () => {
-    setIsUpdating(true);
-    try {
-      // 1. Unregister Service Workers
-      if ('serviceWorker' in navigator) {
-        const registrations = await navigator.serviceWorker.getRegistrations();
-        for (let registration of registrations) {
-          await registration.unregister();
-        }
-      }
-      
-      // 2. Clear all caches
-      if ('caches' in window) {
-        const cacheKeys = await caches.keys();
-        for (let key of cacheKeys) {
-          await caches.delete(key);
-        }
-      }
-      
-      // 3. Force reload from server (bypassing browser cache)
-      window.location.reload();
-    } catch (err) {
-      console.error("Failed to clear cache:", err);
-      setIsUpdating(false);
-      alert("Could not clear cache automatically. Please press Ctrl+Shift+R to hard refresh.");
-    }
-  };
 
   const handleFile = useCallback((file: File) => {
     const ext = file.name.split('.').pop()?.toLowerCase() || '';
@@ -77,14 +48,13 @@ export default function Home() {
               <span className="font-bold text-xl text-slate-900">Fileverse</span>
             </div>
             <div className="flex items-center gap-2">
+              {/* New Settings Button */}
               <button 
-                onClick={handleClearCache} 
-                disabled={isUpdating}
-                className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors disabled:opacity-50"
-                title="Fix update issues by clearing cache"
+                onClick={() => navigate('/settings')} 
+                className="flex items-center gap-2 px-3 py-2 text-sm font-semibold text-slate-500 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition-colors"
+                title="App Settings & Cache Reset"
               >
-                <RefreshCw className={`w-4 h-4 ${isUpdating ? 'animate-spin' : ''}`} />
-                {isUpdating ? 'Updating...' : 'Update App'}
+                <SettingsIcon className="w-5 h-5" />
               </button>
               <button 
                 onClick={() => navigate('/tools')} 
