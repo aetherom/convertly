@@ -9,12 +9,13 @@ import { useToast } from '../components/Toaster';
 
 const MAX_DIM = 2400;
 
-/* ---------- types ---------- */
+/* ---------------- types ---------------- */
 interface Filters {
   brightness: number; contrast: number; saturate: number;
   grayscale: number; sepia: number; invert: number; blur: number;
 }
-const DEFAULT_FILTERS: Filters = { brightness: 100, contrast: 100, saturate: 100, grayscale: 0, sepia: 0, invert: 0, blur: 0 };
+const DEFAULT_FILTERS: Filters =
+  { brightness: 100, contrast: 100, saturate: 100, grayscale: 0, sepia: 0, invert: 0, blur: 0 };
 const filterCss = (f: Filters) =>
   `brightness(${f.brightness}%) contrast(${f.contrast}%) saturate(${f.saturate}%) grayscale(${f.grayscale}%) sepia(${f.sepia}%) invert(${f.invert}%) blur(${f.blur}px)`;
 
@@ -28,7 +29,7 @@ type Overlay =
   | { kind: 'text'; color: string; sizePx: number; text: string; x: number; y: number }
   | { kind: 'stamp'; img: HTMLImageElement; x: number; y: number; w: number; h: number };
 
-/* ---------- ui atoms ---------- */
+/* ---------------- UI atom ---------------- */
 function Slider({ label, value, min, max, unit, onChange }: {
   label: string; value: number; min: number; max: number; unit?: string; onChange: (v: number) => void;
 }) {
@@ -45,15 +46,15 @@ function Slider({ label, value, min, max, unit, onChange }: {
   );
 }
 
-/* ---------- component ---------- */
+/* ---------------- component ---------------- */
 export default function ImageEditor() {
   const navigate = useNavigate();
   const toast = useToast();
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imgRef = useRef<HTMLImageElement | null>(null);
-  const drawingRef = useRef(false);
-  const curInkRef = useRef<Extract<Overlay, { kind: 'ink' }> | null>(null);
+  const draftRef = useRef<{ color: string; size: number; pts: Pt[] } | null>(null);
+  const rafRef = useRef<number | null>(null);
   const anchorRef = useRef<Pt | null>(null);
 
   const [hasImage, setHasImage] = useState(false);
@@ -66,17 +67,33 @@ export default function ImageEditor() {
   const [textValue, setTextValue] = useState('');
   const [baseName, setBaseName] = useState('edited');
 
-  /* ---------- master composer (single source of truth) ---------- */
-  const compose = useCallback((
-    ctx: CanvasRenderingContext2D,
-    img: HTMLImageElement,
-    f: Filters,
-    t: Transform,
-    list: Overlay[]
-  ) => {
+  /* Live mirror of everything the painter needs — event handlers and RAF
+     always read THIS, never stale closures or mutable-shared refs. */
+  const sceneRef = useRef({ filters, transform, overlays });
+  sceneRef.current = { filters, transform, overlays };
+
+  /* -------- master painter -------- */
+  const paint = useCallback(() => {
+    const canvas = canvasRef.current;
+    const img = imgRef.current;
+    if (!canvas || !img || !hasImage) return;
+
+    const { filters: f, transform: t, overlays: list } = sceneRef.current;
     const rotated = t.rot % 180 !== 0;
     const cw = rotated ? img.naturalHeight : img.naturalWidth;
     const ch = rotated ? img.naturalWidth : img.naturalHeight;
+    if (canvas.width !== cw) canvas.width = cw;
+    if (canvas.height !== ch) canvas.height = ch;
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+
+    // include the in-progress stroke, if any
+    const all: Overlay[] = [...list];
+    const draft = draftRef.current;
+    if (draft && draft.pts.length > 0) {
+      all.push({ kind: 'ink', color: draft.color, size: draft.size, pts: draft.pts });
+    }
 
     ctx.clearRect(0, 0, cw, ch);
     ctx.save();
@@ -84,22 +101,23 @@ export default function ImageEditor() {
     ctx.rotate((t.rot * Math.PI) / 180);
     ctx.scale(t.fx, t.fy);
 
-    // photo under its filters
     ctx.filter = filterCss(f);
     ctx.drawImage(img, -img.naturalWidth / 2, -img.naturalHeight / 2);
     ctx.filter = 'none';
 
-    // overlays live in IMAGE space — always aligned, survive rotations
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
     const nx = img.naturalWidth / 2;
     const ny = img.naturalHeight / 2;
-    for (const o of list) {
+
+    for (const o of all) {
+      if (!o) continue; // defensive: skip garbage instead of crashing
       if (o.kind === 'ink') {
+        if (!o.pts || o.pts.length === 0) continue;
         if (o.pts.length === 1) {
           ctx.fillStyle = o.color;
           ctx.beginPath();
-          ctx.arc(o.pts[0].x, o.pts[0].y, o.size / 2, 0, Math.PI * 2);
+          ctx.arc(o.pts[0].x, o.pts[0].y, Math.max(0.5, o.size / 2), 0, Math.PI * 2);
           ctx.fill();
         } else {
           ctx.strokeStyle = o.color;
@@ -118,30 +136,26 @@ export default function ImageEditor() {
       }
     }
     ctx.restore();
-  }, []);
+  }, [hasImage]);
 
-  /* repaint whenever anything visual changes */
-  useEffect(() => {
-    const canvas = canvasRef.current;
-    const img = imgRef.current;
-    if (!canvas || !img || !hasImage) return;
-    const rotated = transform.rot % 180 !== 0;
-    canvas.width = rotated ? img.naturalHeight : img.naturalWidth;
-    canvas.height = rotated ? img.naturalWidth : img.naturalHeight;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+  /* throttle repaints to animation frames */
+  const schedulePaint = useCallback(() => {
+    if (rafRef.current != null) return;
+    rafRef.current = requestAnimationFrame(() => {
+      rafRef.current = null;
+      paint();
+    });
+  }, [paint]);
 
-    const active = curInkRef.current ? [...overlays, curInkRef.current] : overlays;
-    compose(ctx, img, filters, transform, active);
-  }, [hasImage, filters, transform, overlays, compose]);
+  useEffect(() => { paint(); }, [paint, filters, transform, overlays]);
 
-  /* ---------- loading ---------- */
+  /* -------- loading -------- */
   const adoptImage = useCallback((img: HTMLImageElement) => {
     imgRef.current = img;
-    setHasImage(true);
     setFilters(DEFAULT_FILTERS);
     setTransform(DEFAULT_TRANSFORM);
     setOverlays([]);
+    setHasImage(true);
   }, []);
 
   const loadImageFile = useCallback((file?: File) => {
@@ -168,19 +182,19 @@ export default function ImageEditor() {
     raw.src = url;
   }, [adoptImage, toast]);
 
-  /* ---------- pointer maths ---------- */
+  /* -------- pointer maths -------- */
   const dispToImg = (px: number, py: number): Pt => {
     const img = imgRef.current;
     const canvas = canvasRef.current;
     if (!img || !canvas) return { x: 0, y: 0 };
-    const th = (-transform.rot * Math.PI) / 180;
+    const th = (-sceneRef.current.transform.rot * Math.PI) / 180;
     const vx = px - canvas.width / 2;
     const vy = py - canvas.height / 2;
     const rx = vx * Math.cos(th) - vy * Math.sin(th);
     const ry = vx * Math.sin(th) + vy * Math.cos(th);
     return {
-      x: rx / transform.fx + img.naturalWidth / 2,
-      y: ry / transform.fy + img.naturalHeight / 2,
+      x: rx / sceneRef.current.transform.fx + img.naturalWidth / 2,
+      y: ry / sceneRef.current.transform.fy + img.naturalHeight / 2,
     };
   };
 
@@ -193,51 +207,58 @@ export default function ImageEditor() {
     };
   };
 
+  /* finish stroke — snapshot FIRST, mutate ref AFTER, updater touches nothing mutable */
+  const finishStroke = () => {
+    const draft = draftRef.current;
+    if (!draft || draft.pts.length === 0) {
+      draftRef.current = null;
+      return;
+    }
+    const committed: Overlay = {
+      kind: 'ink',
+      color: draft.color,
+      size: draft.size,
+      pts: draft.pts.slice(),   // independent copy — race-proof
+    };
+    draftRef.current = null;
+    setOverlays((prev) => [...prev, committed]);
+  };
+
   const onPointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
     if (!hasImage) return;
     const { px, py } = eventToCanvasPx(e);
     const p = dispToImg(px, py);
-    anchorRef.current = p;                    // acts as anchor for text/stamps
+    anchorRef.current = p; // stamp/text anchor
     if (!drawingMode) return;
     e.currentTarget.setPointerCapture(e.pointerId);
-    drawingRef.current = true;
-    curInkRef.current = { kind: 'ink', color: brushColor, size: brushSize, pts: [p] };
+    draftRef.current = { color: brushColor, size: brushSize, pts: [p] };
   };
 
   const onPointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
-    if (!drawingRef.current || !curInkRef.current) return;
+    const draft = draftRef.current;
+    if (!draft) return;
     const { px, py } = eventToCanvasPx(e);
-    curInkRef.current.pts.push(dispToImg(px, py));
-    // force immediate repaint of live stroke
-    const canvas = canvasRef.current;
-    const img = imgRef.current;
-    if (canvas && img) {
-      const ctx = canvas.getContext('2d');
-      if (ctx) compose(ctx, img, filters, transform, [...overlays, curInkRef.current]);
-    }
+    draft.pts.push(dispToImg(px, py));
+    schedulePaint(); // pure canvas redraw — no React involvement while drawing
   };
 
-  const endStroke = () => {
-    if (drawingRef.current && curInkRef.current) {
-      const finished = curInkRef.current;
-      curInkRef.current = null;
-      setOverlays((prev) => [...prev, finished]);
-    }
-    drawingRef.current = false;
-  };
+  const onPointerUp = () => finishStroke();
+  const onPointerCancel = () => finishStroke();
 
-  /* ---------- tools ---------- */
+  /* -------- tools -------- */
   const requireAnchor = (): Pt => {
     if (anchorRef.current) return anchorRef.current;
-    const img = imgRef.current!;
+    const img = imgRef.current;
+    const fallback: Pt = img
+      ? { x: img.naturalWidth / 2, y: img.naturalHeight / 2 }
+      : { x: 0, y: 0 };
     toast('Click a spot on the image first, then add the stamp.', 'err');
-    return { x: img.naturalWidth / 2, y: img.naturalHeight / 2 };
+    return fallback;
   };
 
   const addText = () => {
     const img = imgRef.current;
-    if (!img) return;
-    if (!textValue.trim()) return;
+    if (!img || !textValue.trim()) return;
     const a = requireAnchor();
     const sizePx = Math.max(24, Math.round(Math.min(img.naturalWidth, img.naturalHeight) / 14));
     setOverlays((prev) => [...prev, { kind: 'text', color: brushColor, sizePx, text: textValue, x: a.x, y: a.y }]);
@@ -282,7 +303,7 @@ export default function ImageEditor() {
     );
   };
 
-  /* ---------- render ---------- */
+  /* ---------------- render ---------------- */
   return (
     <div className="min-h-screen bg-slate-950 text-white">
       <header className="bg-slate-900 border-b border-slate-800 px-4 py-2.5 flex flex-wrap gap-2 justify-between items-center sticky top-0 z-10">
@@ -360,7 +381,7 @@ export default function ImageEditor() {
                 </button>
                 <button onClick={() => setOverlays([])} disabled={!overlays.length}
                   className="py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 disabled:opacity-40">
-                  Clear ink
+                  Clear
                 </button>
                 <label className="py-2 rounded-lg text-xs font-semibold flex items-center justify-center gap-1.5 bg-slate-800 hover:bg-slate-700 cursor-pointer">
                   <ImagePlus className="w-3.5 h-3.5" /> Stamp img
@@ -395,8 +416,9 @@ export default function ImageEditor() {
               ref={canvasRef}
               onPointerDown={onPointerDown}
               onPointerMove={onPointerMove}
-              onPointerUp={endStroke}
-              onPointerLeave={endStroke}
+              onPointerUp={onPointerUp}
+              onPointerCancel={onPointerCancel}
+              onLostPointerCapture={onPointerCancel}
               className={`max-w-full max-h-[80vh] w-auto h-auto object-contain shadow-2xl rounded-lg touch-none ${drawingMode ? 'cursor-crosshair' : 'cursor-default'}`}
             />
           ) : (
