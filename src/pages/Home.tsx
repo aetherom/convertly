@@ -1,5 +1,6 @@
 import { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { APP_VERSION } from '../version';
 import {
   UploadCloud, FileText, Sheet, FileImage, FileType2, Shield, Camera,
   Wrench, Settings as SettingsIcon,
