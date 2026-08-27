@@ -1,11 +1,11 @@
 import { useCallback, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { APP_VERSION } from '../version';
 import {
   UploadCloud, FileText, Sheet, FileImage, FileType2, Shield, Camera,
   Wrench, Settings as SettingsIcon,
 } from 'lucide-react';
 import { useToast } from '../components/Toaster';
+import { APP_VERSION } from '../version';
 
 const ROUTES: Record<string, { route: string; label: string }> = {
   docx: { route: 'word-editor', label: 'Word' },
@@ -122,24 +122,24 @@ export default function Home() {
           <ToolCard icon={<Camera />} label="Optical Transfer" desc="Camera air-gapped sharing" color="bg-amber-500" onClick={() => navigate('/optical-share')} />
         </div>
       </div>
+
+      <footer className="text-center text-xs text-slate-400 pb-8">
+        Fileverse v{APP_VERSION} · 100% local processing ·{' '}
+        <a href="/settings" className="underline hover:text-indigo-600">Settings</a> ·{' '}
+        <a href="/?reset=1" className="underline hover:text-indigo-600">Reset app</a>
+      </footer>
     </div>
   );
 }
 
-const ToolCard = ({ icon, label, desc, color, onClick }: { icon: React.ReactNode; label: string; desc: string; color: string; onClick: () => void }) => (
+const ToolCard = ({ icon, label, desc, color, onClick }: {
+  icon: React.ReactNode; label: string; desc: string; color: string; onClick: () => void;
+}) => (
   <div onClick={onClick} className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md hover:border-indigo-200 cursor-pointer transition-all group">
     <div className={`w-12 h-12 rounded-xl ${color} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform`}>
       <div className="[&>svg]:w-6 [&>svg]:h-6 text-white">{icon}</div>
     </div>
     <h3 className="text-lg font-bold text-slate-900 mb-1">{label}</h3>
     <p className="text-sm text-slate-500">{desc}</p>
-    import { APP_VERSION } from '../version'; // ← add at top of file
-
-// ...inside JSX, at the very bottom of the page:
-<footer className="text-center text-xs text-slate-400 pb-8">
-  Fileverse v{APP_VERSION} · 100% local processing ·{' '}
-  <a href="/settings" className="underline hover:text-indigo-600">Settings</a> ·{' '}
-  <a href="/?reset=1" className="underline hover:text-indigo-600">Reset app</a>
-</footer>
   </div>
 );
