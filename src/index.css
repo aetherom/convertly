@@ -5,3 +5,94 @@
 body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
+
+input[type='color'] {
+  padding: 0;
+  border: none;
+}
+
+/* ---------- Rich text (TipTap) content ---------- */
+.ProseMirror { outline: none; min-height: 55vh; }
+.ProseMirror p { margin: 0.4em 0; }
+.ProseMirror h1 { font-size: 2em; font-weight: 700; margin: 0.5em 0 0.3em; }
+.ProseMirror h2 { font-size: 1.5em; font-weight: 700; margin: 0.5em 0 0.3em; }
+.ProseMirror h3 { font-size: 1.25em; font-weight: 600; margin: 0.5em 0 0.3em; }
+.ProseMirror ul { list-style: disc; padding-left: 1.4em; margin: 0.4em 0; }
+.ProseMirror ol { list-style: decimal; padding-left: 1.4em; margin: 0.4em 0; }
+.ProseMirror blockquote {
+  border-left: 4px solid #94a3b8;
+  padding-left: 1em;
+  color: #475569;
+  margin: 0.6em 0;
+}
+.ProseMirror pre {
+  background: #0f172a;
+  color: #e2e8f0;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+.ProseMirror code { font-family: ui-monospace, monospace; font-size: 0.9em; }
+.ProseMirror mark { background: #fde68a; color: inherit; padding: 0 2px; }
+.ProseMirror img { max-width: 100%; height: auto; border-radius: 6px; }
+.ProseMirror hr { border: none; border-top: 1px solid #cbd5e1; margin: 1em 0; }
+.ProseMirror table { border-collapse: collapse; width: 100%; margin: 0.6em 0; table-layout: fixed; overflow: hidden; }
+.ProseMirror td, .ProseMirror th {
+  border: 1px solid #cbd5e1;
+  padding: 4px 8px;
+  vertical-align: top;
+  position: relative;
+}
+.ProseMirror th { background: #f1f5f9; font-weight: 600; }
+.ProseMirror .selectedCell::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(79, 70, 229, 0.15);
+  pointer-events: none;
+}
+
+/* ---------- Excel grid ---------- */
+.xl-corner, .xl-head {
+  position: sticky;
+  background: #f8fafc;
+  z-index: 10;
+  font-weight: 600;
+  font-size: 11px;
+  color: #475569;
+}
+.xl-corner { left: 0; top: 0; z-index: 20; }
+.xl-head { top: 0; }
+.xl-rowhead { position: sticky; left: 0; }
+
+.xl-input {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  padding: 2px 6px;
+  color: #0f172a;
+  white-space: nowrap;
+}
+
+/* ---------- Print (Word → PDF) ---------- */
+@media print {
+  body.print-doc * { visibility: hidden; }
+  body.print-doc #print-area, body.print-doc #print-area * { visibility: visible; }
+  body.print-doc #print-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    background: #fff !important;
+  }
+  body.print-doc { background: #fff !important; }
+  .no-print { display: none !important; }
+  -webkit-print-color-adjust: exact;
+}
