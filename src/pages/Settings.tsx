@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft, Trash2, Loader2, CheckCircle } from 'lucide-react';
 import { useToast } from '../components/Toaster';
+import { APP_VERSION } from '../version';
 
 export default function Settings() {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ export default function Settings() {
       }
       localStorage.removeItem('fileverse-consent');
       setBusy('done');
-      setTimeout(() => (window.location.href = '/'), 1500);
+      setTimeout(() => window.location.replace('/'), 1200);
     } catch {
       toast('Could not clear everything automatically. Try Ctrl+Shift+R.', 'err');
       setBusy('idle');
@@ -39,11 +40,23 @@ export default function Settings() {
         </div>
       </nav>
 
-      <div className="max-w-3xl mx-auto px-4 py-12">
+      <div className="max-w-3xl mx-auto px-4 py-12 space-y-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6 flex items-center justify-between">
+          <div>
+            <p className="text-sm font-semibold text-slate-900">Running version</p>
+            <p className="text-xs text-slate-500 mt-0.5">
+              If this doesn't match the latest version you pushed, the deploy hasn't landed yet.
+            </p>
+          </div>
+          <span className="px-3 py-1.5 rounded-full bg-indigo-50 text-indigo-700 text-sm font-mono font-bold border border-indigo-200">
+            v{APP_VERSION}
+          </span>
+        </div>
+
         <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-8">
           <h2 className="text-xl font-bold text-slate-900 mb-2">Reset App</h2>
           <p className="text-slate-500 mb-6 text-sm">
-            Clears browser caches and stored service workers, and resets the consent screen. Useful if the app behaves strangely after an update.
+            Clears browser caches and background workers, and resets the consent screen. Use this if the app looks stale after an update.
           </p>
           <button
             onClick={handleClearCache}
