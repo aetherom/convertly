@@ -132,5 +132,13 @@ const ToolCard = ({ icon, label, desc, color, onClick }: { icon: React.ReactNode
     </div>
     <h3 className="text-lg font-bold text-slate-900 mb-1">{label}</h3>
     <p className="text-sm text-slate-500">{desc}</p>
+    import { APP_VERSION } from '../version'; // ← add at top of file
+
+// ...inside JSX, at the very bottom of the page:
+<footer className="text-center text-xs text-slate-400 pb-8">
+  Fileverse v{APP_VERSION} · 100% local processing ·{' '}
+  <a href="/settings" className="underline hover:text-indigo-600">Settings</a> ·{' '}
+  <a href="/?reset=1" className="underline hover:text-indigo-600">Reset app</a>
+</footer>
   </div>
 );
