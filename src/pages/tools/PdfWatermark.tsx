@@ -22,59 +22,41 @@ export default function PdfWatermark() {
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const run = async () => {
-    if (!file) return toast('Choose a PDF first.', 'err');
-    setBusy(true);
-    try {
-      const doc = await PDFDocument.load(await file.arrayBuffer());
-      const font = await doc.embedFont(
-        /times/i.test(text) || false ? undefined : (doc.embedStandardFont as any),
-        {}
-      ).catch(() => null);
-      const helv = await doc.embedFont(undefined as any, {}).catch(() => null);
-      void font; void helv;
-      const stdFont = await doc.embedFont('HelveticaBold' as any).catch(async () => {
-        const { StandardFonts } = await import('pdf-lib');
-        return doc.embedFont(StandardFonts.HelveticaBold);
-      });
-      void stdFont;
+ const run = async () => {
+  if (!file) return toast('Choose a PDF first.', 'err');
+  setBusy(true);
+  try {
+    const { StandardFonts } = await import('pdf-lib');
+    const doc = await PDFDocument.load(await file.arrayBuffer());
+    const wmFont = await doc.embedFont(StandardFonts.HelveticaBold);
+    const col = hexToRgb(color);
+    const safe = text.replace(/[^\u0000-\u00FF]/g, '?') || 'WATERMARK';
+    const tw = wmFont.widthOfTextAtSize(safe, fontSize);
 
-      const { StandardFonts } = await import('pdf-lib');
-      const wmFont = await doc.embedFont(StandardFonts.HelveticaBold);
-      const col = hexToRgb(color);
-      const safe = text.replace(/[^\u0000-\u00FF]/g, '?');
-      const tw = wmFont.widthOfTextAtSize(safe, fontSize);
-
-      for (const page of doc.getPages()) {
-        const { width, height } = page.getSize();
-        if (tiled) {
-          const stepX = tw + fontSize * 2;
-          const stepY = fontSize * 4;
-          for (let y = 0; y < height + stepY; y += stepY) {
-            for (let x = 0; x < width + stepX; x += stepX) {
-              page.drawText(safe, { x, y, size: fontSize, font: wmFont, color: col, opacity, rotate: degrees(30) });
-            }
-          }
-        } else {
-          page.drawText(safe, {
-            x: width / 2 - tw / 2,
-            y: height / 2 - fontSize / 2,
-            size: fontSize,
-            font: wmFont,
-            color: col,
-            opacity,
-            rotate: degrees(30),
-          });
-        }
+    for (const page of doc.getPages()) {
+      const { width, height } = page.getSize();
+      if (tiled) {
+        const stepX = tw + fontSize * 2;
+        const stepY = fontSize * 4;
+        for (let y = -stepY; y < height + stepY; y += stepY)
+          for (let x = -stepX; x < width + stepX; x += stepX)
+            page.drawText(safe, { x, y, size: fontSize, font: wmFont, color: col, opacity, rotate: degrees(30) });
+      } else {
+        page.drawText(safe, {
+          x: width / 2 - tw / 2,
+          y: height / 2 - fontSize / 2,
+          size: fontSize, font: wmFont, color: col, opacity, rotate: degrees(30),
+        });
       }
-      await saveBlob(new Blob([await doc.save()], { type: 'application/pdf' }), file.name.replace(/\.pdf$/i, '-watermarked.pdf'));
-      toast('Watermarked PDF saved.', 'ok');
-    } catch {
-      toast('Watermarking failed — PDF may be encrypted.', 'err');
-    } finally {
-      setBusy(false);
     }
-  };
+    await saveBlob(new Blob([await doc.save()], { type: 'application/pdf' }), file.name.replace(/\.pdf$/i, '-watermarked.pdf'));
+    toast('Watermarked PDF saved.', 'ok');
+  } catch {
+    toast('Watermarking failed — PDF may be encrypted.', 'err');
+  } finally {
+    setBusy(false);
+  }
+};
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-4">
