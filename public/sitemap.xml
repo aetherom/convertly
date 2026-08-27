@@ -1,8 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://fileverse.pages.dev/</loc><priority>1.0</priority></url>
-  <url><loc>https://fileverse.pages.dev/editor/word</loc><priority>0.8</priority></url>
-  <url><loc>https://fileverse.pages.dev/editor/excel</loc><priority>0.8</priority></url>
-  <url><loc>https://fileverse.pages.dev/editor/pdf</loc><priority>0.8</priority></url>
-  <url><loc>https://fileverse.pages.dev/editor/image</loc><priority>0.8</priority></url>
+  <url><loc>https://fileverse.pages.dev/word-editor</loc><priority>0.8</priority></url>
+  <url><loc>https://fileverse.pages.dev/excel-editor</loc><priority>0.8</priority></url>
+  <url><loc>https://fileverse.pages.dev/pdf-editor</loc><priority>0.8</priority></url>
+  <url><loc>https://fileverse.pages.dev/image-editor</loc><priority>0.8</priority></url>
+  <url><loc>https://fileverse.pages.dev/tools/pdf-merge</loc><priority>0.8</priority></url>
+  <url><loc>https://fileverse.pages.dev/tools/pdf-split</loc><priority>0.8</priority></url>
+  <url><loc>https://fileverse.pages.dev/tools/img-to-pdf</loc><priority>0.8</priority></url>
+  <url><loc>https://fileverse.pages.dev/tools/pdf-watermark</loc><priority>0.8</priority></url>
 </urlset>
