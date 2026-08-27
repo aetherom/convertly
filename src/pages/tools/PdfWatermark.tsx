@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { PDFDocument, degrees, rgb } from 'pdf-lib';
+import { PDFDocument, StandardFonts, degrees, rgb } from 'pdf-lib';
 import { ArrowLeft, Stamp, Download } from 'lucide-react';
 import { saveBlob } from '../../lib/save';
 import { useToast } from '../../components/Toaster';
@@ -22,41 +22,49 @@ export default function PdfWatermark() {
   const [busy, setBusy] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
- const run = async () => {
-  if (!file) return toast('Choose a PDF first.', 'err');
-  setBusy(true);
-  try {
-    const { StandardFonts } = await import('pdf-lib');
-    const doc = await PDFDocument.load(await file.arrayBuffer());
-    const wmFont = await doc.embedFont(StandardFonts.HelveticaBold);
-    const col = hexToRgb(color);
-    const safe = text.replace(/[^\u0000-\u00FF]/g, '?') || 'WATERMARK';
-    const tw = wmFont.widthOfTextAtSize(safe, fontSize);
+  const run = async () => {
+    if (!file) return toast('Choose a PDF first.', 'err');
+    setBusy(true);
+    try {
+      const doc = await PDFDocument.load(await file.arrayBuffer());
+      const wmFont = await doc.embedFont(StandardFonts.HelveticaBold);
+      const col = hexToRgb(color);
+      const safe = text.replace(/[^\u0000-\u00FF]/g, '?') || 'WATERMARK';
+      const tw = wmFont.widthOfTextAtSize(safe, fontSize);
 
-    for (const page of doc.getPages()) {
-      const { width, height } = page.getSize();
-      if (tiled) {
-        const stepX = tw + fontSize * 2;
-        const stepY = fontSize * 4;
-        for (let y = -stepY; y < height + stepY; y += stepY)
-          for (let x = -stepX; x < width + stepX; x += stepX)
-            page.drawText(safe, { x, y, size: fontSize, font: wmFont, color: col, opacity, rotate: degrees(30) });
-      } else {
-        page.drawText(safe, {
-          x: width / 2 - tw / 2,
-          y: height / 2 - fontSize / 2,
-          size: fontSize, font: wmFont, color: col, opacity, rotate: degrees(30),
-        });
+      for (const page of doc.getPages()) {
+        const { width, height } = page.getSize();
+        if (tiled) {
+          const stepX = tw + fontSize * 2;
+          const stepY = fontSize * 4;
+          for (let y = -stepY; y < height + stepY; y += stepY) {
+            for (let x = -stepX; x < width + stepX; x += stepX) {
+              page.drawText(safe, { x, y, size: fontSize, font: wmFont, color: col, opacity, rotate: degrees(30) });
+            }
+          }
+        } else {
+          page.drawText(safe, {
+            x: width / 2 - tw / 2,
+            y: height / 2 - fontSize / 2,
+            size: fontSize,
+            font: wmFont,
+            color: col,
+            opacity,
+            rotate: degrees(30),
+          });
+        }
       }
+      await saveBlob(
+        new Blob([await doc.save()], { type: 'application/pdf' }),
+        file.name.replace(/\.pdf$/i, '-watermarked.pdf')
+      );
+      toast('Watermarked PDF saved.', 'ok');
+    } catch {
+      toast('Watermarking failed — PDF may be encrypted.', 'err');
+    } finally {
+      setBusy(false);
     }
-    await saveBlob(new Blob([await doc.save()], { type: 'application/pdf' }), file.name.replace(/\.pdf$/i, '-watermarked.pdf'));
-    toast('Watermarked PDF saved.', 'ok');
-  } catch {
-    toast('Watermarking failed — PDF may be encrypted.', 'err');
-  } finally {
-    setBusy(false);
-  }
-};
+  };
 
   return (
     <div className="min-h-screen bg-slate-950 text-white p-4">
@@ -64,16 +72,21 @@ export default function PdfWatermark() {
       <h1 className="text-2xl font-bold mb-6 flex items-center gap-2"><Stamp className="text-teal-400" /> Watermark PDF</h1>
 
       <div className="max-w-2xl space-y-4">
-        <div onClick={() => inputRef.current?.click()}
-          className="border-2 border-dashed border-slate-700 rounded-xl p-8 text-center cursor-pointer hover:border-indigo-500 transition-colors">
+        <div
+          onClick={() => inputRef.current?.click()}
+          className="border-2 border-dashed border-slate-700 rounded-xl p-8 text-center cursor-pointer hover:border-indigo-500 transition-colors"
+        >
           <p className="text-slate-400">{file ? file.name : 'Click to choose a PDF'}</p>
           <input ref={inputRef} type="file" accept=".pdf" className="hidden" onChange={(e) => setFile(e.target.files?.[0] ?? null)} />
         </div>
 
         <label className="block">
           <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Text</span>
-          <input value={text} onChange={(e) => setText(e.target.value)}
-            className="mt-1 w-full p-3 bg-slate-900 rounded-lg border border-slate-700 outline-none focus:ring-2 ring-indigo-500" />
+          <input
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            className="mt-1 w-full p-3 bg-slate-900 rounded-lg border border-slate-700 outline-none focus:ring-2 ring-indigo-500"
+          />
         </label>
 
         <div className="grid grid-cols-2 gap-4 text-sm">
@@ -100,8 +113,11 @@ export default function PdfWatermark() {
           </label>
         </div>
 
-        <button onClick={run} disabled={busy || !file}
-          className="w-full py-3 bg-indigo-600 rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-40 flex items-center justify-center gap-2">
+        <button
+          onClick={run}
+          disabled={busy || !file}
+          className="w-full py-3 bg-indigo-600 rounded-lg font-semibold hover:bg-indigo-700 disabled:opacity-40 flex items-center justify-center gap-2"
+        >
           <Download className="w-4 h-4" /> {busy ? 'Stamping…' : 'Apply Watermark'}
         </button>
       </div>
